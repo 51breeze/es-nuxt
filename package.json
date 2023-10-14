@@ -1,0 +1,23 @@
+{
+  "name": "es-nuxt",
+  "version": "0.0.8",
+  "typings": "types/index.d.es",
+  "esconfig": {
+    "scope": "es-nuxt",
+    "inherits": [
+      "es-vue",
+      "es-javascript"
+    ]
+  },
+  "scripts": {
+    "dev-test": "jasmine ./test/index.js"
+  },
+  "dependencies": {
+    "es-vue": "^0.4.3"
+  },
+  "devDependencies": {
+    "@nuxt/kit": "^3.7.3",
+    "es-vite-plugin": "^0.0.5",
+    "lodash": "^4.17.21"
+  }
+}
