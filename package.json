@@ -13,11 +13,12 @@
     "dev-test": "jasmine ./test/index.js"
   },
   "dependencies": {
-    "es-vue": "^0.4.3"
+    "es-vue": "latest"
   },
   "devDependencies": {
     "@nuxt/kit": "^3.7.3",
-    "es-vite-plugin": "^0.0.5",
+    "easescript": "latest",
+    "es-vite-plugin": "latest",
     "lodash": "^4.17.21"
   }
 }
