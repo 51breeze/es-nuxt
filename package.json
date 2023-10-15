@@ -1,6 +1,6 @@
 {
   "name": "es-nuxt",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "typings": "types/index.d.es",
   "esconfig": {
     "scope": "es-nuxt",

@@ -10,23 +10,23 @@ function Page(props){
     Component.call(this, props);
 }
 Page.prototype=Object.create(Component.prototype);
-Page.prototype.constructor = Page;
 
+Object.defineProperty(Page.prototype,'constructor',{value:Page})
 Object.defineProperty(Page.prototype,'app',{get:function app(){
     const {vueApp} = this.getNuxtApp();
     return vueApp;
 }});
 
-Page.prototype.getNuxtApp=function getNuxtApp(){
+Object.defineProperty(Page.prototype,'getNuxtApp',{value:function getNuxtApp(){
     const instance = this.getAttribute('instance');
     if(instance)return instance.appContext.app.$nuxt;
     throw new Error("[es-nuxt] getNuxtApp unavailable");
-}
+}})
 
-Page.prototype.getRuntimeConfig=function getRuntimeConfig(){
+Object.defineProperty(Page.prototype,'getRuntimeConfig',{value:function getRuntimeConfig(){
     const instance = this.getNuxtApp();
     return instance.$config;
-}
+}})
 
 function getRequestKey(route, options={}){
     let oparams = options.param || options.params;
@@ -56,7 +56,7 @@ function getRequestKey(route, options={}){
     return uri;
 }
 
-Page.prototype.useAsyncData= function(route, options={}, key=null){
+Object.defineProperty(Page.prototype,'useAsyncData',{value:function useAsyncData(route, options={}, key=null){
     key = key || getRequestKey(route, options);
     const immediate = options.immediate;
     const data = _useAsyncData(key, async ()=>{
@@ -71,9 +71,9 @@ Page.prototype.useAsyncData= function(route, options={}, key=null){
         }
     }
     return data;
-}
+}})
 
-Page.prototype.getUseAsyncData=function(route, options={}){
+Object.defineProperty(Page.prototype,'getUseAsyncData',{value:function getUseAsyncData(route, options={}){
     const nuxt = this.getNuxtApp();
     if( route ){
         const url = getRequestKey(route, options)
@@ -86,7 +86,7 @@ Page.prototype.getUseAsyncData=function(route, options={}){
         return _toRef(nuxt.payload.data, url);
     }
     return nuxt.payload.data;
-}
+}})
 
 Object.defineProperty(Page.prototype,'getRoute',{value:function getRoute(){
     const router = this.toValue(useRouter());

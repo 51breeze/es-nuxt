@@ -26,7 +26,7 @@ function Application(options){
 }
 
 Application.prototype = Object.create( Page.prototype );
-Application.prototype.constructor = Application;
+Object.defineProperty(Application.prototype,'constructor',{value:Application})
 
 Object.defineProperty(Application.prototype,'getNuxtApp',{value:function getNuxtApp(){
     return useNuxtApp();
