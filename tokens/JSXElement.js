@@ -37,6 +37,12 @@ function getTransform(root, ctx){
 
 
 module.exports = function(ctx, stack){
+    if( stack && stack.isComponent ){
+        const desc = stack.description();
+        if(desc && desc.isModule && !ctx.builder.checkRuntimeModule(desc) ){
+            return null;
+        }
+    }
     const obj = getTransform( stack.jsxRootElement, ctx);
     return obj.create( stack, ctx);
 };

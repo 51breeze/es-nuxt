@@ -11,10 +11,12 @@ class VueBuilder extends Core.VueBuilder{
             const Component = this.builder.getGlobalModuleById('web.components.Component');
             const Page = this.builder.getGlobalModuleById('web.components.Page');
             dependencies.forEach( dep=>{
-                if( dep.isReferenceLocalComponent ){
-                    deps.add(dep)
-                }else if( Component !== dep && Page !== dep && this.stack.isModuleForWebComponent(dep) ){
-                    deps.add(dep)
+                if( this.builder.isUsed(dep,module) && this.builder.checkRuntimeModule(dep) ){
+                    if( dep.isReferenceLocalComponent ){
+                        deps.add(dep)
+                    }else if( Component !== dep && Page !== dep && this.stack.isModuleForWebComponent(dep) ){
+                        deps.add(dep)
+                    }
                 }
             });
             if( deps.size > 0 ){
