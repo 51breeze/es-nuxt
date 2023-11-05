@@ -54,6 +54,24 @@ class Builder extends Core.Builder{
             }
         }
 
+        const metadataAnnot = this.getModuleAnnotations(module, ['metadata'])[0];
+        const metadata = {};
+        if( metadataAnnot ){
+            metadataAnnot.getArguments().forEach( (item,index)=>{
+                if( item.assigned ){
+                    if( route && (item.key ==='path' || item.key ==='name')){
+                        return;
+                    }
+                    if( redirect && item.key==='redirect'){
+                        return;
+                    }
+                    metadata[item.key] = this.createToken(item.stack.right);
+                }else if(index===0){
+                    metadata.title = this.createToken(item.stack);
+                }
+            });
+        }
+
         if( this.defineMacros.length>0 ){
             this.defineMacros.forEach( item=>{
                 const [node, stack] = item;
@@ -64,10 +82,16 @@ class Builder extends Core.Builder{
                         arg.properties = arg.properties.filter( property=>{
                             if( property.type==='Property'){
                                 const name = property.key.value;
+                                if(metadata[name])return false
                                 return !(name ==='path' || name ==='name' || redirect && name==='redirect');
                             }
                             return false;
                         });
+
+                        for(let _m in metadata){
+                            arg.properties.push( arg.createPropertyNode(_m, metadata[_m] ))
+                        }
+
                         arg.properties.push( arg.createPropertyNode( 'path', route.path ) )
                         arg.properties.push( arg.createPropertyNode( 'name', route.name ) );
                         if(redirect){
@@ -82,6 +106,10 @@ class Builder extends Core.Builder{
                 this.createPropertyNode( 'path', route.path ),
                 this.createPropertyNode( 'name', route.name )
             ];
+
+            for(let _m in metadata){
+                properties.push( this.createPropertyNode(_m, metadata[_m] ))
+            }
 
             if(redirect){
                 properties.push( this.createPropertyNode( 'redirect', redirect) );

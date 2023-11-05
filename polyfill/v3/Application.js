@@ -42,7 +42,8 @@ Object.defineProperty(Application.prototype,'plugin',{value: async function plug
 }});
 
 Object.defineProperty(Application.prototype,'provide',{value:function provide(name,value){
-    System.registerProvide(name, value, 'global:vue:application')
+    const {vueApp} = useNuxtApp();
+    vueApp.provide(name, value);
     return this;
 }});
 
