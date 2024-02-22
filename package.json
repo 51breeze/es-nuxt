@@ -1,7 +1,7 @@
 {
   "name": "es-nuxt",
   "version": "0.0.10",
-  "typings": "types/index.d.es",
+  "typings": "types/typings.json",
   "esconfig": {
     "scope": "es-nuxt",
     "inherits": [
@@ -10,7 +10,13 @@
     ]
   },
   "scripts": {
-    "dev-test": "jasmine ./test/index.js"
+    "dev-test": "jasmine ./test/index.js",
+    "manifest":"node ./scripts/manifest.js",
+    "build": "cd test && npm run build",
+    "dev": "cd test && npm run dev",
+    "generate": "cd test && npm run generate",
+    "preview": "cd test && npm run preview",
+    "postinstall": "cd test && npm run prepare"
   },
   "dependencies": {
     "es-vue": "latest"

@@ -8,6 +8,13 @@ module.exports = function(ctx,stack){
             return parent.isFunctionExpression || parent.isMethodDefinition || parent.isClassDeclaration
         });
 
+        const method = parent.getParentStack( parent=>{
+            return parent.isMethodDefinition || parent.isClassDeclaration
+        });
+        if( method && method.isMethodDefinition && method.static ){
+            return node;
+        }
+
         if( parent.isFunctionExpression ){
             const context = ctx.getParentByType((parent)=>{
                 return ['FunctionExpression','FunctionDeclaration','ArrowFunctionExpression','MethodDefinition'].includes(parent.type)

@@ -1,13 +1,6 @@
 package web.components;
 import web.components.Component;
 declare class Page extends Component{
-
-    /**
-    * 获取应用实例
-    * 此访问器在子类中不可重写
-    * @return object
-    */
-    final get app():{[key:string]:any}
     
     useAsyncData<T=any>(
         route: string | annotation.IRouter, 

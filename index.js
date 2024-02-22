@@ -62,7 +62,7 @@ class EsNuxtPlugin extends Core.Plugin{
         }
 
         if( !complier.options.scanTypings ){
-            complier.loadTypes([require.resolve('./types/index.d.es')], {scope:'es-nuxt', inherits:['es-vue']});
+           // complier.loadTypes([require.resolve('./types/index.d.es')], {scope:'es-nuxt', inherits:['es-vue']});
         } 
     }
 

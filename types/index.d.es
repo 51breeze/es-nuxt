@@ -560,5 +560,3 @@ declare function definePageMeta(options:nuxt.PageMeta):void;
 
 @Reference('es-vue/types/index.d.es');
 @Reference('./web');
-@Reference('es-vue/types/web/Application.d.es');
-@Reference('./web/Application.d.es');

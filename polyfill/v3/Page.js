@@ -12,10 +12,6 @@ function Page(props){
 Page.prototype=Object.create(Component.prototype);
 
 Object.defineProperty(Page.prototype,'constructor',{value:Page})
-Object.defineProperty(Page.prototype,'app',{get:function app(){
-    const {vueApp} = this.getNuxtApp();
-    return vueApp;
-}});
 
 Object.defineProperty(Page.prototype,'getNuxtApp',{value:function getNuxtApp(){
     const instance = this.getAttribute('instance');

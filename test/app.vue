@@ -3,3 +3,10 @@
     <NuxtPage />
   </div>
 </template>
+<script setup lang="ts">
+
+const id = 0;
+
+export {id};
+
+</script>
