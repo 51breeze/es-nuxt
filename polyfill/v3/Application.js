@@ -23,6 +23,29 @@ if( isServer ){
 const privateKey = Symbol('private');
 function Application(options){
     Page.call(this, options);
+    System.registerProvide('Application:instance', this);
+    const globals = this.globals;
+    const {vueApp} = useNuxtApp();
+    if(globals){
+        const dataset = vueApp.config.globalProperties || (vueApp.config.globalProperties={});
+        Object.keys(globals).forEach(key=>{
+            if(Object.prototype.hasOwnProperty.call(dataset, key)){
+                console.warn(`[ex-nuxt] global properties the '${key}' already exists. maybe affect references of the "vue.config.globalProperties"`)
+            }
+            dataset[key] = globals[key];
+        });
+    }
+    const directives = this.directives;
+    if(directives){
+        Object.keys(directives).forEach( key=>{
+            if( vueApp.directive(key) ){
+                console.error(`[ex-nuxt] global directives the '${key}' already exists.`)
+            }else{
+                vueApp.directive(key, directives[key]);
+            }
+        });
+    }
+    System.invokeHook('application:created', this);
 }
 
 Application.prototype = Object.create( Page.prototype );
@@ -32,8 +55,9 @@ Object.defineProperty(Application.prototype,'getNuxtApp',{value:function getNuxt
     return useNuxtApp();
 }});
 
-Object.defineProperty(Application.prototype,'getRuntimeConfig',{value:function getRuntimeConfig(){
-    return useRuntimeConfig();
+Object.defineProperty(Application.prototype,'getVueApp',{value:function getVueApp(){
+    const {vueApp} = useNuxtApp();
+    return vueApp;
 }});
 
 Object.defineProperty(Application.prototype,'plugin',{value: async function plugin( plugin ){
@@ -48,8 +72,8 @@ Object.defineProperty(Application.prototype,'provide',{value:function provide(na
 }});
 
 Object.defineProperty(Application.prototype,'mixin',{value:function mixin(name, method){
-    const app = this.app;
-    app.mixin({[name]:method});
+    const {vueApp} = useNuxtApp();
+    vueApp.mixin({[name]:method});
     return this;
 }});
 
@@ -61,8 +85,16 @@ Object.defineProperty(Application.prototype,'store',{get:function store(){
     return null;
 }});
 
+Object.defineProperty(Application.prototype,'globals',{get:function globals(){
+    return null;
+}});
+
 Object.defineProperty(Application.prototype,'directives',{get:function directives(){
     return null;
+}});
+
+Object.defineProperty( Application.prototype, 'config', {get:function config(){
+    return useRuntimeConfig();
 }});
 
 Object.defineProperty(Application.prototype,'routes',{get:function routes(){
@@ -74,8 +106,19 @@ Object.defineProperty(Application.prototype,'router',{get:function router(){
    return unref(useRouter());
 }});
 
+Object.defineProperty( Application.prototype, 'getAttribute', {value:function getAttribute(name){
+    if(name==='instance' || name==='vueApp'){
+        return this.getVueApp();
+    }
+    return Page.prototype.getAttribute.call(this,name);
+}});
+
+Object.defineProperty( Application.prototype, 'mount', {value:function mount(){
+   throw new SyntaxError('Application.mount method already removed. in the "es-nuxt" plugin')
+}});
+
 Object.defineProperty( Application.prototype, 'unmount', {value:function unmount(){
-   
+    throw new SyntaxError('Application.unmount method already removed. in the "es-nuxt" plugin')
 }});
 
 Object.defineProperty( Application.prototype, 'invokeHook', {value:function invokeHook(...args){

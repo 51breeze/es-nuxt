@@ -12,10 +12,11 @@ declare class Page extends Component{
         key?:string
     ): Promise<nuxt.AsyncData<T>>;
 
-    getUseAsyncData<T=any>(route:string | {url:string, params?:nuxt.Record<string, any>}):nuxt.AsyncData<T>
+    getUseAsyncData<T=any>(route:string | annotation.IRouter):nuxt.AsyncData<T>
 
     getNuxtApp():nuxt.NuxtApp;
-    getRuntimeConfig():{[key:string]:any}
+
+    config():{[key:string]:any}
 
     withAsyncContext(handler:()=>Promise<nuxt.AsyncData>):[Promise<nuxt.AsyncData>, ()=>void ]
 

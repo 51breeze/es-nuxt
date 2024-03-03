@@ -4,6 +4,7 @@
 ///<namespaces name='web.components' />
 ///<createClass value='false' />
 import {useAsyncData as _useAsyncData} from "#app"
+import {useRuntimeConfig} from '#app/nuxt';
 import { useRouter } from '#app/composables/router'
 import {toRef as _toRef} from 'vue';
 function Page(props){
@@ -11,7 +12,7 @@ function Page(props){
 }
 Page.prototype=Object.create(Component.prototype);
 
-Object.defineProperty(Page.prototype,'constructor',{value:Page})
+Object.defineProperty(Page.prototype,'constructor',{value:Page});
 
 Object.defineProperty(Page.prototype,'getNuxtApp',{value:function getNuxtApp(){
     const instance = this.getAttribute('instance');
@@ -19,9 +20,8 @@ Object.defineProperty(Page.prototype,'getNuxtApp',{value:function getNuxtApp(){
     throw new Error("[es-nuxt] getNuxtApp unavailable");
 }})
 
-Object.defineProperty(Page.prototype,'getRuntimeConfig',{value:function getRuntimeConfig(){
-    const instance = this.getNuxtApp();
-    return instance.$config;
+Object.defineProperty(Page.prototype,'config',{value:function config(){
+    return useRuntimeConfig();
 }})
 
 function getRequestKey(route, options={}){

@@ -29,16 +29,6 @@ class App extends Application{
         }
     }
 
- 
-    onMounted(){
-        console.log('----------App.es onMounted----------------') 
-        
-    }
-
-    onUnmounted(){
-         console.log('----------App.es onUnmounted----------------') 
-    }
-
     @Override
     render(h){
         console.log('----------App.es render----------------')

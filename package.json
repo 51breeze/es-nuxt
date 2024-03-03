@@ -4,6 +4,10 @@
   "typings": "types/typings.json",
   "esconfig": {
     "scope": "es-nuxt",
+    "typings": [
+      "types/web/components",
+      "types/web/Application.d.es"
+    ],
     "inherits": [
       "es-vue",
       "es-javascript"
