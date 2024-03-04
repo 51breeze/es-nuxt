@@ -60,10 +60,6 @@ class EsNuxtPlugin extends Core.Plugin{
         if(!folder["nuxt-runtime-compoments"]){
             folder["nuxt-runtime-compoments"] = normalizePath(path.join(nuxtRootDir,'node_modules/nuxt/dist/head/runtime/components'))
         }
-
-        if( !complier.options.scanTypings ){
-           // complier.loadTypes([require.resolve('./types/index.d.es')], {scope:'es-nuxt', inherits:['es-vue']});
-        } 
     }
 
     getMacros(compilation){

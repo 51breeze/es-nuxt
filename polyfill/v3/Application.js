@@ -23,7 +23,7 @@ if( isServer ){
 const privateKey = Symbol('private');
 function Application(options){
     Page.call(this, options);
-    System.registerProvide('Application:instance', this);
+    System.registerProvide('Application:instance', this, 'global', true);
     const globals = this.globals;
     const {vueApp} = useNuxtApp();
     if(globals){
@@ -45,7 +45,6 @@ function Application(options){
             }
         });
     }
-    System.invokeHook('application:created', this);
 }
 
 Application.prototype = Object.create( Page.prototype );
