@@ -12,11 +12,20 @@
   },
   "esconfig": {
     "scope": "es-nuxt",
-    "inherits": "es-vue,es-javascript"
+    "typings": [
+      "types/web/components",
+      "types/web/Application.d.es"
+    ],
+    "inherits": [
+      "es-vue",
+      "es-javascript"
+    ]
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
     "@types/node": "^18.17.3",
+    "dotenv": "^16.4.5",
+    "dotenv-expand": "^11.0.6",
     "easescript": "latest",
     "element-plus": "^2.3.9",
     "es-php": "latest",

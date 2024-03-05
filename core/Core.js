@@ -9,7 +9,8 @@ const JSXClassBuilder = require('es-vue/core/JSXClassBuilder');
 const JSXTransform = require('es-vue/core/JSXTransform');
 const JSXTransformV3 = require('es-vue/core/JSXTransformV3');
 const JSXTransformV3Optimize = require('es-vue/core/JSXTransformV3Optimize');
-const {Constant,Token,ClassBuilder} = require('es-vue/core/Core');
+const {Constant,Token} = require('es-vue/core/Core');
+const ClassBuilder = require('es-vue/core/ClassBuilder');
 module.exports={
     Plugin,
     Builder,

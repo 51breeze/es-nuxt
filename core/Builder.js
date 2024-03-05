@@ -14,17 +14,8 @@ class Builder extends Core.Builder{
     }
 
     getModuleRoutes(module){
-        let routes = super.getModuleRoutes(module);
-        if( routes && routes.length>0 )return routes;
         const Page = this.compilation.getModuleById( 'web.components.Page' );
-        if( Page && Page.is(module) ){
-            const name = module.getName('/');
-            return [{
-                path:'/'+name,
-                name
-            }]
-        }
-        return [];
+        return super.getModuleRoutes(module, Page && Page.is(module));
     }
 
     getMacros(){
