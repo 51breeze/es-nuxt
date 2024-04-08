@@ -1,4 +1,8 @@
 const path = require('path');
+
+console.log( process.cwd() );
+
+
 module.exports = {
 	cwd:path.join(__dirname, './test'),
 	workspace:"src",

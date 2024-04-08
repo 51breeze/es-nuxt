@@ -18,7 +18,7 @@ class Builder extends Core.Builder{
         return super.getModuleRoutes(module, Page && Page.is(module));
     }
 
-    getMacros(){
+    async getMacros(){
 
         const module = this.compilation.mainModule;
         const route = this.getModuleRoutes(module)[0];
@@ -29,7 +29,7 @@ class Builder extends Core.Builder{
             const args = redirectAnnot.getArguments();
             if( args[0] ){
                 const value = String(args[0].value);
-                const toModule = this.compilation.getModuleById( value );
+                const toModule = await this.compilation.loadTypeAsync( value );
                 if( toModule ){
                     const redirectRoute = this.getModuleRoutes(toModule)[0];
                     if( redirectRoute ){

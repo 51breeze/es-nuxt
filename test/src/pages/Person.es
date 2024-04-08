@@ -92,6 +92,8 @@ class Person extends Page{
 
         //const MyIcon = Icon as web.components.Component;
         return <div xmlns:local="components" xmlns:d="@directives" xmlns:s="@slots" xmlns:ui="web.ui" class="login-container">
+
+            
            
             <ui:Meta content="sfdsfdsfds"></ui:Meta>
             <h6>{this.data.name}</h6>

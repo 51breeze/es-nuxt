@@ -39,7 +39,10 @@ class EsNuxtPlugin extends Core.Plugin{
 
     constructor(complier,options){
         options = merge({}, defaultOptions,  options);
+        options.projectConfigFile = false;
+        options.pageDir = false;
         super(complier, options);
+
         if( this.options.ssr ){
             this.platform = 'server';
             this.generatedCodeMaps = shared.code || (shared.code = new Map());
