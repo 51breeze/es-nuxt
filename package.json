@@ -1,6 +1,6 @@
 {
   "name": "es-nuxt",
-  "version": "0.0.10",
+  "version": "0.1.0",
   "typings": "types/typings.json",
   "esconfig": {
     "scope": "es-nuxt",
