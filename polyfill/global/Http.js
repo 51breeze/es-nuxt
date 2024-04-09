@@ -125,10 +125,11 @@ function httpRequest(config){
             throwIfCancellationRequested(options);
             result.data = data;
             resolve(result);
-        }, (err)=>{
-            reject(err);
-        }).catch( (reason)=>{
-            reject(reason);
+        }).catch( (error)=>{
+            result.data = null;
+            result.error = error;
+            result.status = 500;
+            resolve(result);
         }).finally(()=>{
             if (token) {
                 token.unsubscribe(onCanceled);
