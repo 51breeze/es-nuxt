@@ -1,6 +1,6 @@
 {
   "name": "es-nuxt",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "typings": "types/typings.json",
   "esconfig": {
     "scope": "es-nuxt",
@@ -14,13 +14,7 @@
     ]
   },
   "scripts": {
-    "dev-test": "jasmine ./test/index.js",
-    "manifest": "node ./scripts/manifest.js",
-    "build": "cd test && npm run build",
-    "dev": "cd test && npm run dev",
-    "generate": "cd test && npm run generate",
-    "preview": "cd test && npm run preview",
-    "postinstall": "cd test && npm run prepare"
+    "manifest": "node ./scripts/manifest.js"
   },
   "dependencies": {
     "es-vue": "latest"
