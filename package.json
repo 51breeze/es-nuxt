@@ -13,14 +13,10 @@
       "es-javascript"
     ]
   },
-  "scripts": {
-    "manifest": "node ./scripts/manifest.js"
-  },
   "dependencies": {
     "es-vue": "latest"
   },
   "devDependencies": {
-    "@nuxt/kit": "^3.7.3",
     "dotenv": "^16.4.5",
     "dotenv-expand": "^11.0.6",
     "easescript": "latest",
