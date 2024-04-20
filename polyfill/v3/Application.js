@@ -7,7 +7,6 @@
 ///<references from='web.components.Page' />
 ///<references from='web.events.ComponentEvent' name='ComponentEvent' />
 ///<references from='System' />
-///<import from='element-plus/theme-chalk/base.css' />
 ///<namespaces name='web' />
 ///<createClass value='false' />
 import {useNuxtApp, applyPlugin, useRuntimeConfig} from '#app/nuxt';
@@ -26,6 +25,7 @@ function Application(options){
     System.setConfig('#global#application#instance#',this);
     const globals = this.globals;
     const {vueApp} = useNuxtApp();
+    this[privateKey] = {vueApp};
     if(globals){
         const dataset = vueApp.config.globalProperties || (vueApp.config.globalProperties={});
         Object.keys(globals).forEach(key=>{
@@ -56,7 +56,7 @@ Object.defineProperty(Application.prototype,'getNuxtApp',{value:function getNuxt
 }});
 
 Object.defineProperty(Application.prototype,'getVueApp',{value:function getVueApp(){
-    const {vueApp} = useNuxtApp();
+    const {vueApp} = this[privateKey];
     return vueApp;
 }});
 
@@ -66,13 +66,13 @@ Object.defineProperty(Application.prototype,'plugin',{value: async function plug
 }});
 
 Object.defineProperty(Application.prototype,'provide',{value:function provide(name,value){
-    const {vueApp} = useNuxtApp();
+    const {vueApp} = this[privateKey];
     vueApp.provide(name, value);
     return this;
 }});
 
 Object.defineProperty(Application.prototype,'mixin',{value:function mixin(name, method){
-    const {vueApp} = useNuxtApp();
+    const {vueApp} = this[privateKey];
     vueApp.mixin({[name]:method});
     return this;
 }});

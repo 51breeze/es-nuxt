@@ -2,3 +2,7 @@ node_modules
 /package-lock.json
 /test/build
 /test/dist
+dist
+build
+.output
+.nuxt

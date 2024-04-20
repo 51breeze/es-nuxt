@@ -1,4 +1,4 @@
-package;
+package pages;
 import web.components.Page;
 import web.components.Component;
 // import {ElButton} from 'element-plus/es/components/button'
@@ -20,7 +20,7 @@ import web.components.Viewport
 class Person extends Page{
     
     @Reactive
-    private data:{name:string} = {name:'====66663333===='}
+    private data:{name:string} = {name:'====222222222===='}
 
 
     onClick(e){
@@ -42,7 +42,7 @@ class Person extends Page{
 
         console.log( '----onInitialized----person' )
 
-        this.data.name = "===6666666-222222-----"
+        this.data.name = "===6666666-9999----"
 
         useSeoMeta({
             title:'EaseScript Nuxt'
@@ -69,10 +69,10 @@ class Person extends Page{
 
        // type T1 = typeof await @Http(Account, index)
 
-       const {data, error, refresh} = await this.useAsyncData(@Router(api.http.Account, index));
-       if(data.value && data.value ){
-            this.data4 = data.value.data;
-       }
+    //    const {data, error, refresh} = await this.useAsyncData(@Router(api.http.Account, index));
+    //    if(data.value && data.value ){
+    //         this.data4 = data.value.data;
+    //    }
       
     }
 
@@ -93,12 +93,18 @@ class Person extends Page{
         //const MyIcon = Icon as web.components.Component;
         return <div xmlns:local="components" xmlns:d="@directives" xmlns:s="@slots" xmlns:ui="web.ui" class="login-container">
 
-            
-           
             <ui:Meta content="sfdsfdsfds"></ui:Meta>
             <h6>{this.data.name}</h6>
 
-            <ui:Button><ui:Icon name="Plus" />button</ui:Button>
+            <ui:Button>
+                <ui:Icon name="Plus" />button
+            </ui:Button>
+
+            <ui:Select>
+                <ui:Option value={111}>sfsdf</ui:Option>
+            </ui:Select>
+
+
             <ui:Link to="/">Index</ui:Link>
             <ui:Link to={@Router(pages.members.Profile, param=params)}>profile</ui:Link>
              <ui:Link to={@Router(pages.Address)}>Address</ui:Link>

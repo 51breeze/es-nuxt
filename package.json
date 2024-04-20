@@ -2,6 +2,14 @@
   "name": "es-nuxt",
   "version": "0.2.0",
   "typings": "types/typings.json",
+  "scripts": {
+    "build": "cross-env VITE_CJS_IGNORE_WARNING=true NODE_DEBUG=deprecation nuxt build",
+    "dev": "cross-env VITE_CJS_IGNORE_WARNING=true nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "dev-test": "jasmine test/index.js"
+  },
   "esconfig": {
     "scope": "es-nuxt",
     "typings": [
@@ -17,10 +25,23 @@
     "es-vue": "latest"
   },
   "devDependencies": {
+    "@element-plus/nuxt": "^1.0.8",
+    "@nuxt/devtools": "latest",
+    "@types/node": "^18.17.3",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "dotenv-expand": "^11.0.6",
     "easescript": "latest",
+    "element-plus": "latest",
+    "es-javascript": "latest",
+    "es-php": "latest",
+    "es-thinkphp": "latest",
     "es-vite-plugin": "latest",
-    "lodash": "^4.17.21"
+    "es-vue": "latest",
+    "jasmine": "^3.10.0",
+    "lodash": "^4.17.21",
+    "nuxt": "^3.11.2",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0"
   }
 }

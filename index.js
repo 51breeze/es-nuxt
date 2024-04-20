@@ -14,7 +14,9 @@ if( fs.existsSync(dirname) ){
 
 const defaultOptions={
     dependences:{
-        excludes:[/(^|[\/\\\\])axios([\/\\\\]|$)/i]
+        excludes:[
+            /(^|[\/\\\\])axios([\/\\\\]|$)/i,
+        ]
     },
     hmrHandler:'import.meta.hot',
     vueOptions:{
@@ -23,9 +25,8 @@ const defaultOptions={
         }
     },
     resolve:{
-        mapping:{
-            folder:{}
-        }
+        imports:{},
+        folders:{}
     }
 }
 
@@ -41,8 +42,18 @@ class EsNuxtPlugin extends Core.Plugin{
         options = merge({}, defaultOptions,  options);
         options.projectConfigFile = false;
         options.pageDir = false;
-        super(complier, options);
+        const imports = options.resolve.imports;
+        const nuxtRootDir = options.nuxtRootDir || process.cwd();
+        if(!imports["nuxt-runtime-viewport"]){
+            imports["nuxt-runtime-viewport"] = normalizePath(path.join(nuxtRootDir,'node_modules/nuxt/dist/pages/runtime/page'))
+        }
+        if(!imports["nuxt-runtime-compoments"]){
+            imports["nuxt-runtime-compoments"] = normalizePath(path.join(nuxtRootDir,'node_modules/nuxt/dist/head/runtime/components'))
+        }
+        imports['element-plus/es/components/*'] = 'element-plus/es/components/{filename}/index';
+        imports['element-plus/lib/components/*'] = 'element-plus/es/components/{filename}/index';
 
+        super(complier, options);
         if( this.options.ssr ){
             this.platform = 'server';
             this.generatedCodeMaps = shared.code || (shared.code = new Map());
@@ -55,14 +66,6 @@ class EsNuxtPlugin extends Core.Plugin{
 
         this.name = pkg.name;
         this.version = pkg.version;
-        const nuxtRootDir = options.nuxtRootDir || process.cwd();
-        const folder = this.options.resolve.mapping.folder;
-        if(!folder["nuxt-runtime-viewport"]){
-            folder["nuxt-runtime-viewport"] = normalizePath(path.join(nuxtRootDir,'node_modules/nuxt/dist/pages/runtime/page'))
-        }
-        if(!folder["nuxt-runtime-compoments"]){
-            folder["nuxt-runtime-compoments"] = normalizePath(path.join(nuxtRootDir,'node_modules/nuxt/dist/head/runtime/components'))
-        }
     }
 
     getMacros(compilation){
