@@ -8,7 +8,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "dev-test": "jasmine test/index.js"
+    "dev-test": "jasmine test/index.js",
+    "manifest": "node scripts/manifest.js"
   },
   "esconfig": {
     "scope": "es-nuxt",
