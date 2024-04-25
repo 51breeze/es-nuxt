@@ -50,8 +50,8 @@ class EsNuxtPlugin extends Core.Plugin{
         if(!imports["nuxt-runtime-compoments"]){
             imports["nuxt-runtime-compoments"] = normalizePath(path.join(nuxtRootDir,'node_modules/nuxt/dist/head/runtime/components'))
         }
-        imports['element-plus/es/components/*'] = 'element-plus/es/components/{filename}/index';
-        imports['element-plus/lib/components/*'] = 'element-plus/es/components/{filename}/index';
+        imports['element-plus/es/components/*'] = 'element-plus/es/components/{basename}/index';
+        imports['element-plus/lib/components/*'] = 'element-plus/es/components/{basename}/index';
 
         super(complier, options);
         if( this.options.ssr ){

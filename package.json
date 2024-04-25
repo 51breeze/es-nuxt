@@ -23,7 +23,8 @@
     ]
   },
   "dependencies": {
-    "es-vue": "latest"
+    "es-vue": "latest",
+    "glob-path": "latest"
   },
   "devDependencies": {
     "@element-plus/nuxt": "^1.0.8",
