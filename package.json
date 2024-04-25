@@ -1,6 +1,6 @@
 {
   "name": "es-nuxt",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "typings": "types/typings.json",
   "scripts": {
     "build": "cross-env VITE_CJS_IGNORE_WARNING=true NODE_DEBUG=deprecation nuxt build",
@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "es-vue": "latest",
+    "cross-env": "^7.0.3",
     "glob-path": "latest"
   },
   "devDependencies": {
