@@ -24,6 +24,9 @@ const defaultOptions={
             mode:'all'
         }
     },
+    importSourceQuery:{
+        enabled:true,
+    },
     resolve:{
         imports:{},
         folders:{}
