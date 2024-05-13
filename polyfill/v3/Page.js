@@ -5,8 +5,10 @@
 ///<createClass value='false' />
 import {useAsyncData as _useAsyncData} from "#app"
 import {useRuntimeConfig} from '#app/nuxt';
+import {useHead as _useHead} from "#app"
 import { useRouter } from '#app/composables/router'
-import {toRef as _toRef} from 'vue';
+import {toRef as _toRef, getCurrentInstance} from 'vue';
+
 function Page(props){
     Component.call(this, props);
 }
@@ -53,21 +55,33 @@ function getRequestKey(route, options={}){
 }
 
 Object.defineProperty(Page.prototype,'useAsyncData',{value:function useAsyncData(route, options={}, key=null){
-    key = key || getRequestKey(route, options);
-    const immediate = options.immediate;
-    const data = _useAsyncData(key, async ()=>{
-        return await System.createHttpRequest(Http, route, options)
-    }, options);
-    const isServer = import.meta.server;
-    if(!isServer && immediate !== false){
-        if( this.toValue(data.status) === 'idle' ){
-            const asyncDataPromise = Promise.resolve(data.execute({_initial:true})).then(() => data);
-            Object.assign(asyncDataPromise, data);
-            return asyncDataPromise;
+    const [data] = this.withAsyncContext(()=>{
+        key = key || getRequestKey(route, options);
+        const immediate = options.immediate;
+        const data = _useAsyncData(key, async ()=>{
+            return await System.createHttpRequest(Http, route, options)
+        }, options);
+        const isServer = import.meta.server;
+        if(!isServer && immediate !== false){
+            if( this.toValue(data.status) === 'idle' ){
+                const asyncDataPromise = Promise.resolve(data.execute({_initial:true})).then(() => data);
+                Object.assign(asyncDataPromise, data);
+                return asyncDataPromise;
+            }
         }
-    }
+        return data;
+    });
     return data;
-}})
+}});
+
+Object.defineProperty(Page.prototype,'useHead',{value:function useHead(options={}){
+    const instance = getCurrentInstance();
+    if(instance){
+        return _useHead(options);
+    }else{
+        return this.withContext(()=>_useHead(options));
+    }
+}});
 
 Object.defineProperty(Page.prototype,'getUseAsyncData',{value:function getUseAsyncData(route, options={}){
     const nuxt = this.getNuxtApp();

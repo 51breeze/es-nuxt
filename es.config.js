@@ -30,6 +30,7 @@ module.exports = {
 	plugins:[
 
 		{
+			name:'es-nuxt',
 			plugin:require("./index.js"),
 			options:{
 			  version:"3.0.0",
