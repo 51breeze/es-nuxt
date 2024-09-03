@@ -56,7 +56,7 @@ function getRequestKey(route, options={}){
 
 Object.defineProperty(Page.prototype,'useAsyncData',{value:function useAsyncData(route, options={}, key=null){
     const [data] = this.withAsyncContext(()=>{
-        key = key || getRequestKey(route, options);
+        key = key || getRequestKey(route, options||{});
         const immediate = options.immediate;
         const data = _useAsyncData(key, async ()=>{
             return await System.createHttpRequest(Http, route, options)

@@ -2,16 +2,12 @@
 
 import path from "path";
 import esConfig from './es.config.js';
-import readyHook from './lib/readyHook';
+import ready from './lib/ready.js';
 
 const optimizeDeps = [
     //'element-plus/es/components/icon/index',
     //'element-plus'
 ];
-
-
-
-
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -39,9 +35,7 @@ export default defineNuxtConfig({
     ],
 
     hooks: {
-        ready:(next)=>{
-            readyHook(esConfig)(next)
-        }
+        ready
     },
     // nitro:{
     //     output:{

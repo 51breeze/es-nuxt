@@ -25,15 +25,11 @@ package nuxt{
         mimeType?: string;
     }
 
-    declare type Record<K, T> = {
-        [key:string]: T
-    };
-
     declare interface ModuleDependencies {
-        scripts: Record<string, ResourceMeta>;
-        styles: Record<string, ResourceMeta>;
-        preload: Record<string, ResourceMeta>;
-        prefetch: Record<string, ResourceMeta>;
+        scripts: Record<ResourceMeta>;
+        styles: Record<ResourceMeta>;
+        preload: Record<ResourceMeta>;
+        prefetch: Record<ResourceMeta>;
     }
 
     declare interface SSRContext {
@@ -46,7 +42,7 @@ package nuxt{
         [key: string]: any;
     }
 
-    declare type RuntimeConfigNamespace = Record<string, any>;
+    declare type RuntimeConfigNamespace = Record;
     declare interface PublicRuntimeConfig extends RuntimeConfigNamespace {}
 
     declare interface NitroRuntimeConfigApp {
@@ -73,9 +69,7 @@ package nuxt{
         app: NitroRuntimeConfigApp;
         nitro: {
             envPrefix?: string,
-            routeRules?: {
-                [path: string]: NitroRouteConfig
-            }
+            routeRules?:Record<NitroRouteConfig>
         };
         [key: string]: any;
     }
@@ -85,9 +79,7 @@ package nuxt{
         app: NitroRuntimeConfigApp;
         nitro?: {
             envPrefix?: string,
-            routeRules?: {
-                [path: string]: NitroRouteConfig
-            }
+            routeRules?:Record<NitroRouteConfig>
         };
         _public: PublicRuntimeConfig;
     }
@@ -102,14 +94,14 @@ package nuxt{
         nuxt: NuxtApp;
         payload: NuxtPayload;
         /** This is used solely to render runtime config with SPA renderer. */
-        config?: Record<string, any>;
+        config?: Record;
         teleports?: Record<string, string>;
         renderMeta?: () => Promise<NuxtMeta> | NuxtMeta;
         islandContext?: any;
         /** @internal */
         _renderResponse?: any;
         /** @internal */
-        _payloadReducers: Record<string, (data: any) => any>;
+        _payloadReducers: Record<(data: any) => any>;
     }
 
     declare type HookResult = Promise<void> | void;
@@ -126,9 +118,9 @@ package nuxt{
         path?: string;
         serverRendered?: boolean;
         prerenderedAt?: number;
-        data: Record<string, any>;
-        state: Record<string, any>;
-        config?:{[key:string]:any};
+        data: Record;
+        state: Record;
+        config?:Record;
         error?: Error | {
             url: string,
             statusCode: number,
@@ -137,7 +129,7 @@ package nuxt{
             description: string,
             data?: any
         } | null;
-        _errors: Record<string,any>;
+        _errors: Record;
         [key: string]: any;
     }
 
@@ -164,7 +156,7 @@ package nuxt{
 
 
     declare interface NuxtApp {
-        vueApp: {[key:string]:any};
+        vueApp:Record;
         globalName: string;
         versions: Record<string, string>;
         hooks: Hookable[];
@@ -175,9 +167,9 @@ package nuxt{
         runWithContext<T=any>(fn: T):any | Promise<any>;
         [key: string]: any;
         /** @internal */
-        _asyncDataPromises: Record<string, Promise<any>>;
+        _asyncDataPromises: Record<Promise<any>>;
         /** @internal */
-        _asyncData: Record<string, {
+        _asyncData: Record<{
             data:any,
             pending:boolean,
             error: any,
@@ -186,22 +178,22 @@ package nuxt{
         /** @internal */
         _middleware: {
             global: any[],
-            named: Record<string, any>
+            named: Record
         };
         /** @internal */
         _observer?: {
             observe: (element: any, callback: () => void) => () => void
         };
         /** @internal */
-        _payloadCache?: Record<string, Promise<Record<string, any>> | Record<string, any>>;
+        _payloadCache?: Record<Promise<Record> | Record>;
         /** @internal */
-        _appConfig: {[key:string]:any};
+        _appConfig: Record;
         /** @internal */
         _route: any;
         /** @internal */
-        _islandPromises?: Record<string, Promise<any>>;
+        _islandPromises?: Record<Promise<any>>;
         /** @internal */
-        _payloadRevivers: Record<string, (data: any) => any>;
+        _payloadRevivers: Record<(data: any) => any>;
         $config: RuntimeConfig;
         isHydrating?: boolean;
         deferHydration: () => () => void | Promise<void>;
@@ -233,9 +225,9 @@ package nuxt{
     }
 
     declare function NextPlugin(nuxt:NuxtApp): void | Promise<void> | Promise<{
-        provide?: {[key:string]}
+        provide?: Record
     }> | {
-        provide?: {[key:string]}
+        provide?: Record
     };
 
     declare interface ObjectPlugin extends PluginMeta {
@@ -273,17 +265,17 @@ package nuxt{
         */
         dedupe?: boolean;
     }
-    declare interface AsyncData<T=any>{
+    declare interface AsyncData<T=Record>{
         data: vue.Ref<T>;
         pending: vue.Ref<boolean>;
         refresh: (opts?: AsyncDataExecuteOptions) => Promise<void>;
         execute: (opts?: AsyncDataExecuteOptions) => Promise<void>;
-        error: vue.Ref<any>;
-        status:vue.Ref<any>;
+        error: vue.Ref<string>;
+        status:vue.Ref<number>;
     }
 
     declare interface CookieOptions{
-        decode?(value: string):{[key:string]:any};
+        decode?(value: string):Record;
         encode?(value:object):string;
         default?():any;
         watch?: boolean | 'shallow';
@@ -346,14 +338,14 @@ package nuxt{
     declare interface MetaObject {
         title?: string
         titleTemplate?: string | ((title?: string) => string)
-        base?: Record<string, any>
-        link?: Record<string, any>[]
-        meta?: Record<string, any>[]
-        style?: Record<string, any>[]
-        script?: Record<string, any>[]
-        noscript?: Record<string, any>[]
-        htmlAttrs?: Record<string, any>
-        bodyAttrs?: Record<string, any>
+        base?: Record
+        link?: Record[]
+        meta?: Record[]
+        style?: Record[]
+        script?: Record[]
+        noscript?: Record[]
+        htmlAttrs?: Record
+        bodyAttrs?: Record
     }
 
     declare interface PageMeta {
@@ -414,7 +406,7 @@ import {isNuxtPlugin} from "#app"
 declare function isNuxtPlugin(plugin: any): boolean;
 
 import {useAppConfig} from "#app"
-declare function useAppConfig(): {[key:string]:any};
+declare function useAppConfig(): Record;
 /**
  * Ensures that the setup function passed in has access to the Nuxt instance via `useNuxt`.
  *
@@ -428,7 +420,7 @@ declare function useNuxtApp(): nuxt.NuxtApp;
 import {useRuntimeConfig} from "#app"
 declare function useRuntimeConfig(): nuxt.RuntimeConfig;
 import {defineAppConfig} from "#app"
-declare function defineAppConfig<T extends {[key:string]:any}>(config:T ): T;
+declare function defineAppConfig<T extends Record>(config:T ): T;
 import {useAsyncData} from "#app"
 declare function useAsyncData(handler: (ctx?: nuxt.NuxtApp) => Promise<any>, options?: nuxt.AsyncDataOptions): Promise<nuxt.AsyncData>;
 import {useAsyncData} from "#app"
@@ -438,13 +430,13 @@ declare function useLazyAsyncData(handler: (ctx?: nuxt.NuxtApp) => Promise<any>,
 import {useLazyAsyncData} from "#app"
 declare function useLazyAsyncData(key: string, handler: (ctx?: nuxt.NuxtApp) => Promise<any>, options?: nuxt.AsyncDataOptions):Promise<nuxt.AsyncData>;
 import {useNuxtData} from "#app"
-declare function useNuxtData(key: string): {data:any};
+declare function useNuxtData<T=null|boolean|string|number|Record>(key: string): {data:vue.Ref<T>};
 import {useFetch} from "#app"
-declare function useFetch(url:string, opts?:{[key:string]:any}): Promise<nuxt.AsyncData>;
+declare function useFetch(url:string, opts?:Record): Promise<nuxt.AsyncData>;
 import {useLazyFetch} from "#app"
-declare function useLazyFetch(url:string, opts?:{[key:string]:any}): Promise<nuxt.AsyncData>;
+declare function useLazyFetch(url:string, opts?:Record): Promise<nuxt.AsyncData>;
 import {useCookie} from "#app"
-declare function useCookie(name: string, _opts?: nuxt.CookieOptions):{[key:string]:any};
+declare function useCookie<T=null|boolean|string|number|Record>(name: string, _opts?: nuxt.CookieOptions):vue.Ref<T>
 import {useError} from "#app"
 declare function useError():Error | {
     url: string,
@@ -460,11 +452,9 @@ declare function useRouter(): web.components.Router;
 import {useRoute} from "#app"
 declare function useRoute(): web.components.Route;
 import {useRequestHeaders} from "#app"
-declare function useRequestHeaders(include: any[]): {
-    [key:string]: string
-};
+declare function useRequestHeaders(include: any[]): Record<string>
 import {useRequestHeaders} from "#app"
-declare function useRequestHeaders(): nuxt.Record<string, string>
+declare function useRequestHeaders(): Record<string, string>
 import {useRequestEvent} from "#app"
 declare function useRequestEvent(nuxtApp?: nuxt.NuxtApp): any;
 import {useRequestURL} from "#app"
@@ -484,9 +474,9 @@ declare function useServerHead(options:nuxt.MetaObject):any;
 import {useServerHeadSafe} from "@unhead/vue"
 declare function useServerHeadSafe(input:nuxt.MetaObject):any;
 import {useSeoMeta} from "#app"
-declare function useSeoMeta(options:nuxt.Record<string, any>):any;
+declare function useSeoMeta(options:Record):any;
 import {useServerSeoMeta} from "#app"
-declare function useServerSeoMeta(options:nuxt.Record<string, any>): any;
+declare function useServerSeoMeta(options:Record): any;
 /**
  * Allows full control of the hydration cycle to set and receive data from the server.
  *
