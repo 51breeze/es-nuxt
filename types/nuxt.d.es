@@ -430,13 +430,13 @@ declare function useLazyAsyncData(handler: (ctx?: nuxt.NuxtApp) => Promise<any>,
 import {useLazyAsyncData} from "#app"
 declare function useLazyAsyncData(key: string, handler: (ctx?: nuxt.NuxtApp) => Promise<any>, options?: nuxt.AsyncDataOptions):Promise<nuxt.AsyncData>;
 import {useNuxtData} from "#app"
-declare function useNuxtData<T=null|boolean|string|number|Record>(key: string): {data:vue.Ref<T>};
+declare function useNuxtData<T=any>(key: string): {data:vue.Ref<T>};
 import {useFetch} from "#app"
 declare function useFetch(url:string, opts?:Record): Promise<nuxt.AsyncData>;
 import {useLazyFetch} from "#app"
 declare function useLazyFetch(url:string, opts?:Record): Promise<nuxt.AsyncData>;
 import {useCookie} from "#app"
-declare function useCookie<T=null|boolean|string|number|Record>(name: string, _opts?: nuxt.CookieOptions):vue.Ref<T>
+declare function useCookie<T=any>(name: string, _opts?: nuxt.CookieOptions):vue.Ref<T>
 import {useError} from "#app"
 declare function useError():Error | {
     url: string,
