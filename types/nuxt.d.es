@@ -437,6 +437,9 @@ import {useLazyFetch} from "#app"
 declare function useLazyFetch(url:string, opts?:Record): Promise<nuxt.AsyncData>;
 import {useCookie} from "#app"
 declare function useCookie<T=any>(name: string, _opts?: nuxt.CookieOptions):vue.Ref<T>
+import {refreshCookie} from "#app"
+declare function refreshCookie(name: string):void
+
 import {useError} from "#app"
 declare function useError():Error | {
     url: string,

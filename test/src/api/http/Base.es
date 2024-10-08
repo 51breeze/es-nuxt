@@ -1,13 +1,10 @@
 package api.http;
 
-import server.kernel.Controller;
-
-class Base extends Controller{
+class Base{
 
     protected request:server.kernel.Request
 
     constructor(){
-        super();
         this.request = request();
     }
 

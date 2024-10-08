@@ -37,7 +37,6 @@ function normalizePath(pathname){
     return path.sep ==='\\' ? pathname.replace(/\\/g, '/') : pathname;
 }
 
-const shared = {};
 const pkg = require("./package.json");
 class EsNuxtPlugin extends Core.Plugin{
 
@@ -59,8 +58,6 @@ class EsNuxtPlugin extends Core.Plugin{
         super(complier, options);
         if( this.options.ssr ){
             this.platform = 'server';
-            this.generatedCodeMaps = shared.code || (shared.code = new Map());
-            this.generatedSourceMaps = shared.map || (shared.map = new Map());
         }
 
         if( this.options.hot ){

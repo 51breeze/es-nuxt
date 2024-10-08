@@ -23,7 +23,7 @@ export default defineNuxtConfig({
     //     assets:'assets'
     // },
 
-    modules:['@element-plus/nuxt'],
+    modules:['@element-plus/nuxt', '@pinia/nuxt'],
 
     //rootDir:__dirname,
 

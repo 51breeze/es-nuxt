@@ -107,6 +107,9 @@ Object.defineProperty(Application.prototype,'router',{get:function router(){
 }});
 
 Object.defineProperty( Application.prototype, 'getAttribute', {value:function getAttribute(name){
+    if(name==='nuxtApp'){
+        return this.getNuxtApp();
+    }
     if(name==='instance' || name==='vueApp'){
         return this.getVueApp();
     }

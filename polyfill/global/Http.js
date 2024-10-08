@@ -139,7 +139,7 @@ function httpRequest(config){
 }
 
 function throwIfCancellationRequested(config) {
-    if (config.cancelToken) {
+    if (config && config.cancelToken) {
       config.cancelToken.throwIfRequested();
     }
 }

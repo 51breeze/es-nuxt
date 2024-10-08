@@ -2,6 +2,9 @@ import web.Application
 import web.components.Viewport;
 import web.ui.Layout
 import web.ui.Body;
+
+import UserStore from 'stores/UserStore.es';
+
 class App extends Application{
 
     @Main
@@ -13,9 +16,7 @@ class App extends Application{
             System.setConfig('http.request.baseURL', '/api');
             console.log('----client:host----',  '/api'  )
         }
-
-        console.log('----------app---------')
-
+  
         if( !System.hasRegisterHook('httpRequestCreated') ){
             System.registerHook('httpRequestCreated', (request)=>{
                 request.interceptors.response.use((res)=>{
@@ -31,7 +32,7 @@ class App extends Application{
 
     @Override
     render(h){
-        console.log('----------App.es render----------------')
+        console.log( UserStore() )
         return <Layout name="custom">
             <Viewport />
         </Layout>

@@ -13,6 +13,8 @@ import net.Http;
 import components.List;
 import web.components.Viewport
 
+import stores.ProfileStore;
+
 
 //import api.http.Account
 
@@ -26,9 +28,6 @@ class Person extends Page{
     onClick(e){
         console.log(e)
     }
-
-   
-
 
     private lang:string = 'sss';
 
@@ -44,12 +43,16 @@ class Person extends Page{
 
         this.data.name = "===6666666-9999----"
 
-        useSeoMeta({
-            title:'EaseScript Nuxt'
-        })
+        this.withContext(()=>{
 
-        useServerSeoMeta({
-            title:'EaseScript Nuxt'
+            useSeoMeta({
+                title:'EaseScript Nuxt'
+            })
+
+            useServerSeoMeta({
+                title:'EaseScript Nuxt'
+            })
+
         })
 
       
@@ -87,8 +90,9 @@ class Person extends Page{
     @Override
     protected render(){
 
+        console.log( ProfileStore.use().userId )
+
         var params = {id:60}
-        var bss = 'sss' as any;
 
         //const MyIcon = Icon as web.components.Component;
         return <div xmlns:local="components" xmlns:d="@directives" xmlns:s="@slots" xmlns:ui="web.ui" class="login-container">
