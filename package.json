@@ -1,6 +1,6 @@
 {
   "name": "es-nuxt",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "typings": "types/typings.json",
   "scripts": {
     "build": "cross-env VITE_CJS_IGNORE_WARNING=true NODE_DEBUG=deprecation nuxt build",
