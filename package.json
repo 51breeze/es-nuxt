@@ -1,21 +1,23 @@
 {
   "name": "es-nuxt",
-  "version": "0.4.0",
-  "typings": "types/typings.json",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "typings": "dist/types/typings.json",
   "scripts": {
-    "build": "cross-env VITE_CJS_IGNORE_WARNING=true NODE_DEBUG=deprecation nuxt build",
-    "dev": "cross-env VITE_CJS_IGNORE_WARNING=true nuxt dev",
+    "test:build": "cross-env VITE_CJS_IGNORE_WARNING=true NODE_DEBUG=deprecation nuxt build",
+    "run": "npm run build && cross-env VITE_CJS_IGNORE_WARNING=true nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "dev-test": "jasmine test/index.js",
-    "manifest": "esc -o types -f types/index.d.es, --manifest"
+    "dev": "node ./scripts/build.js && jasmine test/index.js",
+    "build": "npm run manifest && node ./scripts/build.js",
+    "manifest": "esc -o lib/types -f lib/types/index.d.es --manifest --scope es-next --inherit es-vue,es-javascript"
   },
   "esconfig": {
     "scope": "es-nuxt",
     "typings": [
-      "types/web/components",
-      "types/web/Application.d.es"
+      "dist/types/web/components",
+      "dist/types/web/Application.d.es"
     ],
     "inherits": [
       "es-vue",
@@ -23,9 +25,8 @@
     ]
   },
   "dependencies": {
-    "cross-env": "^7.0.3",
-    "es-vue": "latest",
-    "glob-path": "latest"
+    "@easescript/es-vue": "latest",
+    "cross-env": "^7.0.3"
   },
   "devDependencies": {
     "@element-plus/nuxt": "^1.0.8",
@@ -42,6 +43,7 @@
     "es-thinkphp": "latest",
     "es-vite-plugin": "latest",
     "es-vue": "latest",
+    "esbuild-plugin-copy": "^2.1.1",
     "jasmine": "^3.10.0",
     "lodash": "^4.17.21",
     "nuxt": "^3.11.2",
