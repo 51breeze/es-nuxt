@@ -2,37 +2,38 @@ const Compiler = require("easescript/lib/core/Compiler");
 const Diagnostic = require("easescript/lib/core/Diagnostic");
 const Compilation = require("easescript/lib/core/Compilation");
 const path =require("path");
-const plugin = require("../index");
+
+let plugin = require("../dist/index");
+plugin = plugin.default || plugin
 
 class Creator {
     constructor(options){
         const compiler = new Compiler(Object.assign({
-            debug:true,
+            debug:false,
             diagnose:false,
             autoLoadDescribeFile:true,
-            output:path.join(__dirname,"./build"),
             workspace:path.join(__dirname,"./src"),
             parser:{
                 locations:true
             }
         },options || {}));
-        compiler.initialize();
+
         this._compiler = compiler;
-        this.plugin = compiler.applyPlugin({
-            plugin,
-            options:{
-                emitFile:true,
-                module:'esm',
-                hot:true,
-                webpack:false,
-                babel:false,
-                output:path.join(__dirname,"./build"),
-                version:3,
-               // format:'vue-template',//vue-jsx vue-template
-                srcCSS:false,
+        this.plugin = plugin({
+            emitFile:true,
+            module:'esm',
+            outExt:'.js',
+            outDir:'test/.output',
+            mode:'development',
+            srcCSS:false,
+            sourceMaps:true,
+            useAbsolutePathImport:true,
+            vue:{
                 optimize:true,
-                sourceMaps:true,
-                useAbsolutePathImport:true
+            },
+            metadata:{
+                env:process.env,
+                //platform:'server'
             }
         });
     }
@@ -42,12 +43,13 @@ class Creator {
     }
 
     factor(file,source){
-        return new Promise((resolved,reject)=>{
+        return new Promise( async(resolved,reject)=>{
             const compiler = this.compiler;
+            await compiler.initialize();
+            let compilation = null;
             try{
-                const compilation=file ? compiler.createCompilation(file) : new Compilation( compiler );
-                compilation.parser(source);
-                compilation.checker();
+                const compilation=file ? await compiler.createCompilation(file) : new Compilation( compiler );
+                await compilation.parserAsync(source);
                 if(compilation.stack){
                     resolved(compilation);
                 }else{
@@ -60,27 +62,8 @@ class Creator {
         });
     }
 
-    startBySource(source){
-        return this.factor(null, source);
-    }
-
-    startByFile(file){
-        return this.factor(file);
-    }
-
-    expression( stack ){
-        return this.plugin.make( stack );
-    }
-
-    build( compilation , done){
-        return this.plugin.start( compilation, (e)=>{
-               if( e ){
-                   console.log(e);
-               }else{
-                   console.log("build done!!")
-                   done && done()
-               }
-        });
+    build(compilation){
+        this.plugin.run(compilation);
     }
 }
 

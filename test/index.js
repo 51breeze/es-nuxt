@@ -6,55 +6,56 @@ const compiler = require("./compiler");
 //const specs = fs.readdirSync( root );
 //specs.forEach(file=>require(path.join(root,file)));
 
-describe('compile file', function() {
-    const creator = new compiler.Creator();
-    creator.startByFile("./pages/Person.es").then( compilation=>{
-        it('should compile success and build', function() {
-            const errors = compilation.compiler.errors;
-            expect('Expected 0 errors').toContain( errors.length );
-            if( errors.length===0 ){
-                creator.build( compilation, ()=>{
-                    //console.log("==========", require( './build/Index' ) )
-                });
-            }else{
-                errors.forEach((error)=>{
-                    fail( error.toString() );
-                });
-            }
-        });
-    }).catch( error=>{
-        const errors=error.errors;
-        it(`compiler failed 'Index.es'`, function() {
-            errors && errors.forEach((error)=>{
-                fail( error.message );
-            });
-        });
+const creator = new compiler.Creator();
+describe('compile file pages/Person', function() {
+   
+    let compilation = null;
+    let errors = [];
+    beforeAll(async function() {
+        compilation = await creator.factor('./pages/Person.es');
+        errors = compilation.compiler.errors;
     });
 
-
-    creator.startByFile("../App.es").then( compilation=>{
-        it('should compile success and build', function() {
-            const errors = compilation.compiler.errors;
-            expect('Expected 0 errors').toContain( errors.length );
-            if( errors.length===0 ){
-                creator.build( compilation, ()=>{
-                    //console.log("==========", require( './build/Index' ) )
-                });
-            }else{
-                errors.forEach((error)=>{
-                    fail( error.toString() );
-                });
+    afterAll(()=>{
+        errors.forEach( item=>{
+            if( item.kind == 0 ){
+                fail( item.toString() )
             }
         });
-    }).catch( error=>{
-        const errors=error.errors;
-        it(`compiler failed 'App.es'`, function() {
-            errors && errors.forEach((error)=>{
-                fail( error.message );
-            });
-        });
+        compilation = null;
+    })
+
+    it('should compile success and build', function() {
+        expect('Expected 0 errors').toContain( errors.length );
+        if( errors.length===0 ){
+            creator.build( compilation);
+        }
+    });
+    
+});
+
+describe('compile file App', function() {
+    let compilation = null;
+    let errors = [];
+    beforeAll(async function() {
+        compilation = await creator.factor('./pages/Members.es');
+        errors = compilation.compiler.errors;
     });
 
+    afterAll(()=>{
+        errors.forEach( item=>{
+            if( item.kind == 0 ){
+                fail( item.toString() )
+            }
+        });
+        compilation = null;
+    })
 
-
+    it('should compile success and build', function() {
+        expect('Expected 0 errors').toContain( errors.length );
+        if( errors.length===0 ){
+            creator.build( compilation);
+        }
+    });
+    
 });

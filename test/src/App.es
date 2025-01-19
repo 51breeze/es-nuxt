@@ -32,7 +32,7 @@ class App extends Application{
 
     @Override
     render(h){
-        console.log( UserStore() )
+       
         return <Layout name="custom">
             <Viewport />
         </Layout>

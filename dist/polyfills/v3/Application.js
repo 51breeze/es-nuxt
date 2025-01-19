@@ -4,161 +4,125 @@
  * https://github.com/51breeze/EaseScript
  * @author Jun Ye <664371281@qq.com>
  */
-///<import from='vue' name='Vue' namespaced />
-///<references from='web.components.Component' />
-///<references from='web.components.Router' />
+///<references from='web.components.Page' />
 ///<references from='web.events.ComponentEvent' name='ComponentEvent' />
-///<references from='EventDispatcher' />
-///<references from='Reflect' />
 ///<references from='System' />
-///<import from='${__filename}?callhook&action=config' name='__config'/>
-///<import from='${__filename}?callhook&action=route' name='__routes' />
 ///<namespaces name='web' />
+///<createClass value='false' />
+import {useNuxtApp, applyPlugin, useRuntimeConfig} from '#app/nuxt';
+import { useRouter } from '#app/composables/router'
+import { unref } from 'vue'
 
-const hasOwn = Object.prototype.hasOwnProperty;
-const privateKey = Symbol('private');
-function Application( options ){
-    Component.call(this);
-    this[privateKey] = Object.create({
-        _vueApp:null,
-        _provides:Object.create(null),
-        _mixins:Object.create(null),
-        _plugins:[],
-        _children:[],
-        _options:options
-    });
-    System.setConfig('#global#application#instance#',this)
+const isServer = !!process.server;
+System.env.ssr = isServer;
+if( isServer ){
+    System.env.setPlatform('EsNuxt', '0.0.1');
 }
 
-Application.prototype = Object.create( Component.prototype );
-Application.prototype.constructor = Application;
+const privateKey = Symbol('private');
+function Application(options){
+    Page.call(this, options);
+    System.setConfig('#global#application#instance#',this);
+    const globals = this.globals;
+    const {vueApp} = useNuxtApp();
+    this[privateKey] = {vueApp};
+    if(globals){
+        const dataset = vueApp.config.globalProperties || (vueApp.config.globalProperties={});
+        Object.keys(globals).forEach(key=>{
+            if(Object.prototype.hasOwnProperty.call(dataset, key)){
+                console.warn(`[ex-nuxt] global properties the '${key}' already exists. maybe affect references of the "vue.config.globalProperties"`)
+            }
+            dataset[key] = globals[key];
+        });
+    }
+    const directives = this.directives;
+    if(directives){
+        Object.keys(directives).forEach( key=>{
+            if( vueApp.directive(key) ){
+                console.error(`[ex-nuxt] global directives the '${key}' already exists.`)
+            }else{
+                vueApp.directive(key, directives[key]);
+            }
+        });
+    }
+    console.log("==========application:created===========")
+    System.invokeHook('application:created', this);
+}
 
-Object.defineProperty(Application.prototype,'plugin',{value:function plugin( plugin ){
-    plugin = Array.isArray(plugin) ? plugin : [plugin];
-    this[privateKey]._plugins.push( ...plugin );
+Application.prototype = Object.create( Page.prototype );
+Object.defineProperty(Application.prototype,'constructor',{value:Application})
+
+Object.defineProperty(Application.prototype,'getNuxtApp',{value:function getNuxtApp(){
+    return useNuxtApp();
+}});
+
+Object.defineProperty(Application.prototype,'getVueApp',{value:function getVueApp(){
+    const {vueApp} = this[privateKey];
+    return vueApp;
+}});
+
+Object.defineProperty(Application.prototype,'plugin',{value: async function plugin( plugin ){
+    await applyPlugin(useNuxtApp(), plugin);
     return this;
 }});
 
 Object.defineProperty(Application.prototype,'provide',{value:function provide(name,value){
-    this[privateKey]._provides[name] = value;
+    const {vueApp} = this[privateKey];
+    vueApp.provide(name, value);
     return this;
 }});
 
 Object.defineProperty(Application.prototype,'mixin',{value:function mixin(name, method){
-    this[privateKey]._mixins[name] = method;
+    const {vueApp} = this[privateKey];
+    vueApp.mixin({[name]:method});
     return this;
 }});
 
 Object.defineProperty(Application.prototype,'locale',{get:function locale(){
     return null;
 }});
+
 Object.defineProperty(Application.prototype,'store',{get:function store(){
     return null;
 }});
+
 Object.defineProperty(Application.prototype,'globals',{get:function globals(){
     return null;
 }});
+
 Object.defineProperty(Application.prototype,'directives',{get:function directives(){
     return null;
 }});
 
-Object.defineProperty(Application.prototype,'routes',{get:function routes(){
-    return __routes;
-}});
-
 Object.defineProperty( Application.prototype, 'config', {get:function config(){
-    return __config;
+    return useRuntimeConfig();
 }});
 
-Object.defineProperty(Application.prototype,'render',{value:function render(){
-    //throw new Error('application render method must overwrite in subclass');
+Object.defineProperty(Application.prototype,'routes',{get:function routes(){
+    const router = this.router;
+    return router ? router.getRoutes() : [];
 }});
 
 Object.defineProperty(Application.prototype,'router',{get:function router(){
-    const routes = this.routes;
-    if( routes && routes.length === 0 )return null;
-    const router = this[privateKey]._router;
-    if( router )return router;
-    return this[privateKey]._router = new Router({
-        routes:this.routes
-    });
+   return unref(useRouter());
 }});
 
 Object.defineProperty( Application.prototype, 'getAttribute', {value:function getAttribute(name){
-    if(name==='instance' || name==='vueApp'){
-        return this[privateKey]._vueApp;
+    if(name==='nuxtApp'){
+        return this.getNuxtApp();
     }
-    return Component.prototype.getAttribute.call(this,name);
+    if(name==='instance' || name==='vueApp'){
+        return this.getVueApp();
+    }
+    return Page.prototype.getAttribute.call(this,name);
 }});
 
-Object.defineProperty(Application.prototype,'mount',{value:function mount(element){
-    const target = this[privateKey];
-    const mixins = target._mixins;
-    const plugins = target._plugins;
-    const options = target._options || {};
-    const esInstance = this;
-    const vccOpts = this.constructor.__vccOpts || {};
-    const app = Vue.createApp({
-        ...vccOpts,
-        ...options,
-        setup(...args){
-            if( vccOpts.setup ){
-                return vccOpts.setup.call(this, ...args);
-            }else{
-                return function(){
-                    return esInstance.render(Vue.h);
-                }
-            }
-        }
-    });
-
-    const globals = this.globals;
-    if(globals){
-        const globalProperties = app.config.globalProperties || (app.config.globalProperties = {});
-        Object.assign(globalProperties, Object(globals));
-    }
-
-    target._vueApp = app;
-    if( mixins ){
-        app.mixin( mixins );
-    }
-    if( plugins && plugins.length > 0 ){
-        plugins.forEach( plugin=> app.use( plugin ) );
-    }
-
-    const directives = this.directives;
-    if( directives ){
-        for(let name in directives){
-            app.directive(name, directives[name]);
-        }
-    }
-
-    const router =  this.router;
-    if( router ){
-        app.use( router );
-    }
-    const store = this.store;
-    if( store ){
-        app.provide('store', store);
-    }
-    const locale = this.locale;
-    if( locale ){
-        app.provide('locale', locale);
-    }
-    const provides = target._provides;
-    for(var name in provides){
-        app.provide(name, provides[name]);
-    }
-
-    System.invokeHook('application:created', this);
-    app.mount( element );
-
+Object.defineProperty( Application.prototype, 'mount', {value:function mount(){
+   throw new SyntaxError('Application.mount method already removed. in the "es-nuxt" plugin')
 }});
 
 Object.defineProperty( Application.prototype, 'unmount', {value:function unmount(){
-    const instance = this.getAttribute('app');
-    if(instance)instance.unmount();
-    return this;
+    throw new SyntaxError('Application.unmount method already removed. in the "es-nuxt" plugin')
 }});
 
 Object.defineProperty( Application.prototype, 'invokeHook', {value:function invokeHook(...args){

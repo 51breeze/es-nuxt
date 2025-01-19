@@ -1,4 +1,7 @@
 const path = require('path')
+
+let _plugin = require( "./dist/index.js")
+_plugin = _plugin.default || _plugin;
 module.exports = {
 	workspace:"test/src",
 	output:"./server",
@@ -31,7 +34,7 @@ module.exports = {
 
 		{
 			name:'es-nuxt',
-			plugin:require("../es-nuxt"),
+			plugin:_plugin,
 			options:{
 			  version:"3.0.0",
 			  optimize:true,
@@ -40,11 +43,6 @@ module.exports = {
 			 // format:"vue-template",
 			  hmrHandler:'import.meta.hot',
 			  recordFilePath:true,
-			  styleLoader:[
-				"style-loader",
-				"css-loader",
-				"sass-loader"
-			  ],
 			  resolve:{
 				mapping:{
 					folder:{
@@ -60,46 +58,46 @@ module.exports = {
 			}
 		},
 		
-		{
-			name:"es-thinkphp",
-			plugin:require("es-thinkphp"),
-			options:{
-				import:true,
-				includes:[
-					// "api/config/*",
-					// "api/lang/*",
-					// 'api/middleware.es',
-					// 'api/http/Image.es'
-				],
-				context:{
-					inherits:['es-php'],
-					include:[
-						/([\\\/]|^)api([\\\/])/,
-					],
-					only:true
-				},
-				resolve:{
-					using:[],
-					mapping:{
-						folder:{
-							"****.es::controller":"app/%1...",
-							"****.es::model":"app/%1...",
-							"****.es::router":"route",
-							"*/lang/*.es::general":"app/lang",
-							"*/*/lang/*.es::general":"app/%1/lang",
-							"*/middleware/*.es::*":"app/middleware",
-							"*/config/*.es::general":"config",
-							"*/*/config/*.es::general":"app/%1/config",
-							"**/middleware.es::general":"app/%1...",
-						},
-						namespace:{
+		// {
+		// 	name:"es-thinkphp",
+		// 	plugin:require("es-thinkphp"),
+		// 	options:{
+		// 		import:true,
+		// 		includes:[
+		// 			// "api/config/*",
+		// 			// "api/lang/*",
+		// 			// 'api/middleware.es',
+		// 			// 'api/http/Image.es'
+		// 		],
+		// 		context:{
+		// 			inherits:['es-php'],
+		// 			include:[
+		// 				/([\\\/]|^)api([\\\/])/,
+		// 			],
+		// 			only:true
+		// 		},
+		// 		resolve:{
+		// 			using:[],
+		// 			mapping:{
+		// 				folder:{
+		// 					"****.es::controller":"app/%1...",
+		// 					"****.es::model":"app/%1...",
+		// 					"****.es::router":"route",
+		// 					"*/lang/*.es::general":"app/lang",
+		// 					"*/*/lang/*.es::general":"app/%1/lang",
+		// 					"*/middleware/*.es::*":"app/middleware",
+		// 					"*/config/*.es::general":"config",
+		// 					"*/*/config/*.es::general":"app/%1/config",
+		// 					"**/middleware.es::general":"app/%1...",
+		// 				},
+		// 				namespace:{
 							
-						}
-					}
-				},
-				output:path.join(__dirname, "./server")
-			}
-		}
+		// 				}
+		// 			}
+		// 		},
+		// 		output:path.join(__dirname, "./server")
+		// 	}
+		// }
 	],
 	devServer:{
 		open:false,
