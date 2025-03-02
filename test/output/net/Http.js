@@ -1,3 +1,4 @@
+import Class from "./../Class.js";
 /*
  * EaseScript
  * Copyright © 2017 EaseScript All rights reserved.
@@ -5,10 +6,6 @@
  * https://github.com/51breeze/EaseScript
  * @author Jun Ye <664371281@qq.com>
  */
-
-///<references from='Class' />
-///<export name='_Http' />
-///<namespaces name='net' />
 import { $fetch } from "ofetch";
 const allowFields = {
     url:"url",
@@ -42,14 +39,12 @@ const allowFields = {
     cache:'cache',
     mode:'mode',
 }
-
 const defaultConfig = {
     dataType:'json',
     responseType:'json',
     timeout: 60000,
     headers:{},
 };
-
 const hasOwn = Object.prototype.hasOwnProperty;
 function makeConfig(config={}){
     const options = Object.create(null);
@@ -63,7 +58,6 @@ function makeConfig(config={}){
             throw new TypeError(`Http options field '${key}' is invalid. \r\n Available fields:\r\n${props}`);
         }
     });
-
     let {params, url='/', data, method="GET"} = options;
     options.method = method.toUpperCase();
     delete options.url;
@@ -77,7 +71,6 @@ function makeConfig(config={}){
     options.params = params
     return {url, options};
 }
-
 function httpRequest(config){
     return new Promise((resolve, reject)=>{
         throwIfCancellationRequested(config);
@@ -119,7 +112,6 @@ function httpRequest(config){
                 }
             });
         }
-
         $fetch(url, options).then((data)=>{
             throwIfCancellationRequested(options);
             result.data = data;
@@ -136,13 +128,11 @@ function httpRequest(config){
         });
     });
 }
-
 function throwIfCancellationRequested(config) {
     if (config && config.cancelToken) {
       config.cancelToken.throwIfRequested();
     }
 }
-
 class Cancel{
     constructor(message){
         this.message = message;
@@ -151,13 +141,11 @@ class Cancel{
         return 'Cancel' + (this.message ? ': ' + this.message : '');
     }
 }
-
 class CancelToken{
     constructor(executor){
         if (typeof executor !== 'function') {
             throw new TypeError('executor must be a function.');
         }
-
         this.reason = null;
         let resolvePromise=null;
         this.promise = new Promise((resolve)=>{
@@ -174,7 +162,6 @@ class CancelToken{
             }
             this._listeners = null;
         });
-
         const _this = this;
         this.promise.then=function(onfulfilled){
             var _resolve;
@@ -187,7 +174,6 @@ class CancelToken{
             };
             return promise;
         };
-
         executor((message)=>{
             if(this.reason)return;
             if(resolvePromise){
@@ -196,13 +182,11 @@ class CancelToken{
             }
         });
     }
-
     throwIfRequested() {
         if (this.reason) {
             throw this.reason;
         }
     }
-
     subscribe(listener) {
         if (this.reason) {
             listener(this.reason);
@@ -215,7 +199,6 @@ class CancelToken{
             this._listeners = [listener];
         }
     }
-
     unsubscribe(listener) {
         if (!this._listeners) {
             return;
@@ -225,7 +208,6 @@ class CancelToken{
             this._listeners.splice(index, 1);
         }
     }
-
     static source() {
         let cancel;
         let token = new CancelToken((c)=>{
@@ -237,7 +219,6 @@ class CancelToken{
         };
     };
 }
-
 class HttpInterceptorManager{
     constructor(){
         this.handlers = [];
@@ -279,9 +260,7 @@ class HttpInterceptorManager{
         });
     };
 }
-
 class _Http{
-
     static create(config){
         return new _Http(config);
     }
@@ -296,7 +275,6 @@ class _Http{
             return callback.apply(null, args);
         };
     }
-
     constructor(config={}){
         this.config = Object.assign( Object.create(null), defaultConfig, config );
         this.interceptors={
@@ -304,7 +282,6 @@ class _Http{
             response:new HttpInterceptorManager(),
         }
     }
-
     request(config={}){
         config = Object.assign( Object.create(null), this.config, config );
         const requestInterceptorChain = [];
@@ -316,12 +293,10 @@ class _Http{
             synchronous = synchronous && interceptor.synchronous;
             requestInterceptorChain.unshift(interceptor.fulfilled, interceptor.rejected);
         });
-
         const responseInterceptorChain = [];
         this.interceptors.response.forEach((interceptor)=>{
             responseInterceptorChain.push(interceptor.fulfilled, interceptor.rejected);
         });
-
         let promise = null;
         if(!synchronous) {
             let chain = [httpRequest, undefined];
@@ -333,7 +308,6 @@ class _Http{
             }
             return promise;
         }
-
         let newConfig = config;
         while(requestInterceptorChain.length){
             const onFulfilled = requestInterceptorChain.shift();
@@ -345,7 +319,6 @@ class _Http{
                 break;
             }
         }
-
         try {
             promise = httpRequest(newConfig);
         } catch (error) {
@@ -356,32 +329,30 @@ class _Http{
         }
         return promise;
     }
-
     get(url, config={}){
         return this.request({...config, url, method:'GET'})
     }
-
     delete(url, config={}){
         return this.request({...config, url, method:'DELETE'})
     }
-
     head(url, config={}){
         return this.request({...config, url, method:'HEAD'})
     }
-
     post(url, data, config={}){
         return this.request({...config, url, data, method:'POST'})
     }
-
     put(url, data, config={}){
         return this.request({...config, url, data, method:'PUT'})
     }
-
     patch(url, data, config={}){
         return this.request({...config, url, data, method:'OPTIONS'})
     }
 }
-
 _Http.HttpInterceptorManager = HttpInterceptorManager;
 _Http.CancelToken = CancelToken;
 _Http.Cancel = Cancel;
+Class.creator(_Http,{
+    m:513,
+    name:"Http"
+})
+export default _Http;

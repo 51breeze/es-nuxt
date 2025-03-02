@@ -1,0 +1,70 @@
+import Class from "./../../Class.js";
+import Event from "./../../Event.js";
+function ComponentEvent(type,bubbles,cancelable){
+    Event.call(this,type,bubbles,cancelable);
+}
+Class.creator(ComponentEvent,{
+    m:513,
+    ns:"web.events",
+    name:"ComponentEvent",
+    inherit:Event,
+    methods:{
+        BEFORE_CREATE:{
+            m:784,
+            value:'componentBeforeCreate'
+        },
+        BEFORE_MOUNT:{
+            m:784,
+            value:'componentBeforeMount'
+        },
+        BEFORE_UPDATE:{
+            m:784,
+            value:'componentBeforeUpdate'
+        },
+        BEFORE_DESTROY:{
+            m:784,
+            value:'componentBeforeDestroy'
+        },
+        ERROR_CAPTURED:{
+            m:784,
+            value:'componentErrorCaptured'
+        },
+        UPDATED:{
+            m:784,
+            value:'componentUpdated'
+        },
+        MOUNTED:{
+            m:784,
+            value:'componentMounted'
+        },
+        CREATED:{
+            m:784,
+            value:'componentCreated'
+        },
+        ACTIVATED:{
+            m:784,
+            value:'componentActivated'
+        },
+        DEACTIVATED:{
+            m:784,
+            value:'componentDeactivated'
+        },
+        DESTROYED:{
+            m:784,
+            value:'componentDestroyed'
+        },
+        RENDER_TRACKED:{
+            m:784,
+            value:'componentRenderTracked'
+        },
+        RENDER_TRIGGERED:{
+            m:784,
+            value:'componentonRenderTriggered'
+        },
+        SERVER_PREFETCH:{
+            m:784,
+            value:'componentonServerPrefetch'
+        }
+    }
+});
+export default ComponentEvent;

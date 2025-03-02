@@ -36,7 +36,11 @@ class Person extends Page{
 
 
         await new Promise( (resolve)=>{
-            setTimeout(resolve, 1000)
+            setTimeout(()=>{
+                resolve(null);
+                ProfileStore.use().userId = 99
+            }, 1000)
+            
         });
 
         console.log( '----onInitialized----person' )
@@ -83,14 +87,14 @@ class Person extends Page{
     private data2:{[key:string]} = {}
 
      @Reactive
-    private data4:{[key:string]:any, msg?:string} = {}
+    private data4:{[key:string]:any, msg?:string} = {select:1}
 
 
 
     @Override
     protected render(){
 
-        console.log( ProfileStore.use().userId )
+        console.log( ProfileStore.use().userId,'--999--' )
 
         var params = {id:60}
 
@@ -104,8 +108,9 @@ class Person extends Page{
                 <ui:Icon name="Plus" />button
             </ui:Button>
 
-            <ui:Select>
-                <ui:Option value={111}>sfsdf</ui:Option>
+            <ui:Select b:value={data4.select}>
+                <ui:Option value={1} label={"one"} >one</ui:Option>
+                <ui:Option value={2} label={"two"} >two</ui:Option>
             </ui:Select>
 
 

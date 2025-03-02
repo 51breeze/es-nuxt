@@ -1,17 +1,17 @@
 {
-  "name": "es-nuxt",
+  "name": "@easescript/es-nuxt",
   "version": "0.0.1",
   "main": "dist/index.js",
   "typings": "dist/types/typings.json",
   "scripts": {
     "test:build": "cross-env VITE_CJS_IGNORE_WARNING=true NODE_DEBUG=deprecation nuxt build",
-    "run": "npm run build && cross-env VITE_CJS_IGNORE_WARNING=true nuxt dev",
+    "test": "npm run build && cross-env VITE_CJS_IGNORE_WARNING=true nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "dev": "node ./scripts/build.js && jasmine test/index.js",
     "build": "npm run manifest && node ./scripts/build.js",
-    "manifest": "esc -o lib/types -f lib/types/index.d.es --manifest --scope es-next --inherit es-vue,es-javascript"
+    "manifest": "esc -o lib/types -f lib/types/index.d.es --manifest --scope es-next --inherit @easescript/es-vue,@easescript/es-javascript"
   },
   "esconfig": {
     "scope": "es-nuxt",

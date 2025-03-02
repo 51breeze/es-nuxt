@@ -3727,14 +3727,23 @@ function isVModule(value) {
 function getVirtualModuleManager(VirtualModuleFactory) {
   const virtualization = /* @__PURE__ */ new Map();
   function createVModule(sourceId, factory = VirtualModuleFactory) {
-    sourceId = Array.isArray(sourceId) ? sourceId.join(".") : String(sourceId);
+    let isSymbol = typeof sourceId === "symbol";
+    if (!isSymbol) {
+      sourceId = Array.isArray(sourceId) ? sourceId.join(".") : String(sourceId);
+    }
     let old = virtualization.get(sourceId);
     if (old)
       return old;
-    let segs = sourceId.split(".");
-    let vm = new factory(segs.pop(), segs);
-    virtualization.set(sourceId, vm);
-    return vm;
+    if (isSymbol) {
+      let vm = new factory(sourceId, []);
+      virtualization.set(sourceId, vm);
+      return vm;
+    } else {
+      let segs = sourceId.split(".");
+      let vm = new factory(segs.pop(), segs);
+      virtualization.set(sourceId, vm);
+      return vm;
+    }
   }
   function getVModule(sourceId) {
     return virtualization.get(sourceId);
@@ -4348,7 +4357,7 @@ var Context = class _Context extends Token_default {
       }
     }
   }
-  getGlobalRefName(stack, name, group = null) {
+  getGlobalRefName(stack, name, objectKey = null) {
     if (!stack) {
       if (import_Utils4.default.isModule(this.target)) {
         stack = this.target.compilation.stack;
@@ -4358,19 +4367,19 @@ var Context = class _Context extends Token_default {
       stack = stack || this;
     }
     let variables = this.variables;
-    if (group) {
+    if (objectKey) {
       let key = "getGlobalRefName:" + name;
-      if (this.cache.has(group, key)) {
-        return this.cache.get(group, key);
+      if (this.cache.has(objectKey, key)) {
+        return this.cache.get(objectKey, key);
       } else {
         let value = variables.hasRefs(stack, name, true) ? variables.genGlobalRefs(stack, name) : variables.getGlobalRefs(stack, name);
-        this.cache.set(group, key, value);
+        this.cache.set(objectKey, key, value);
         return value;
       }
     }
     return variables.getGlobalRefs(stack, name);
   }
-  getLocalRefName(stack, name, group = null) {
+  getLocalRefName(stack, name, objectKey = null) {
     if (!stack) {
       if (import_Utils4.default.isModule(this.target)) {
         stack = this.target.compilation.stack;
@@ -4380,20 +4389,78 @@ var Context = class _Context extends Token_default {
       stack = stack || this;
     }
     let variables = this.variables;
-    if (group) {
+    if (objectKey) {
       let key = "getLocalRefName:" + name;
-      if (this.cache.has(group, key)) {
-        return this.cache.get(group, key);
+      if (this.cache.has(objectKey, key)) {
+        return this.cache.get(objectKey, key);
       } else {
         let value = variables.hasRefs(stack, name) ? variables.genLocalRefs(stack, name) : variables.getLocalRefs(stack, name);
-        this.cache.set(group, key, value);
+        this.cache.set(objectKey, key, value);
         return value;
       }
     }
     return variables.getLocalRefs(stack, name);
   }
+  genLocalRefName(stack, name, objectKey = null) {
+    if (!stack) {
+      if (import_Utils4.default.isModule(this.target)) {
+        stack = this.target.compilation.stack;
+      } else {
+        stack = this.target.stack;
+      }
+      stack = stack || this;
+    }
+    let variables = this.variables;
+    if (objectKey) {
+      let key = "genLocalRefName:" + name;
+      if (this.cache.has(objectKey, key)) {
+        return this.cache.get(objectKey, key);
+      } else {
+        let value = variables.genLocalRefs(stack, name);
+        this.cache.set(objectKey, key, value);
+        return value;
+      }
+    }
+    return variables.genLocalRefs(stack, name);
+  }
+  genGlobalRefName(stack, name, objectKey = null) {
+    if (!stack) {
+      if (import_Utils4.default.isModule(this.target)) {
+        stack = this.target.compilation.stack;
+      } else {
+        stack = this.target.stack;
+      }
+      stack = stack || this;
+    }
+    let variables = this.variables;
+    if (objectKey) {
+      let key = "genGlobalRefName:" + name;
+      if (this.cache.has(objectKey, key)) {
+        return this.cache.get(objectKey, key);
+      } else {
+        let value = variables.genGlobalRefs(stack, name);
+        this.cache.set(objectKey, key, value);
+        return value;
+      }
+    }
+    return variables.genGlobalRefs(stack, name);
+  }
+  getWasLocalRefName(target, name, genFlag = false) {
+    let key = genFlag ? "genLocalRefName:" + name : "getLocalRefName:" + name;
+    if (this.cache.has(target, key)) {
+      return this.cache.get(target, key);
+    }
+    return null;
+  }
+  getWasGlobalRefName(target, name, genFlag = false) {
+    let key = genFlag ? "genGlobalRefName:" + name : "getGlobalRefName:" + name;
+    if (this.cache.has(target, key)) {
+      return this.cache.get(target, key);
+    }
+    return null;
+  }
   getImportAssetsMapping(file, options = {}) {
-    if (isExcludeDependency(this.options.dependences.excludes, file, this.target)) {
+    if (isExcludeDependency(this.options.dependency.excludes, file, this.target)) {
       return null;
     }
     if (!options.group) {
@@ -4429,7 +4496,7 @@ var Context = class _Context extends Token_default {
   getModuleImportSource(source, context, sourceId = null) {
     const config = this.options;
     const isString = typeof source === "string";
-    if (isString && isExternalDependency(this.options.dependences.externals, source, context)) {
+    if (isString && isExternalDependency(this.options.dependency.externals, source, context)) {
       return source;
     }
     if (isString && source.includes("${__filename}")) {
@@ -4760,24 +4827,11 @@ function getVariableManager() {
     return manage.has(name);
   }
   function getRefs(context, name, isTop = false, flags = REFS_All) {
-    let manage = null;
-    let ctxScope = context;
-    let scope = null;
-    if (import_Utils5.default.isStack(context)) {
-      scope = context.scope;
-      if (!import_Scope.default.is(scope)) {
-        throw new Error("Variable.getRefs scope invalid");
-      }
-      manage = _getVariableManage(
-        isTop ? scope.getScopeByType("top") : scope.getScopeByType("function") || scope.getScopeByType("top")
-      );
-    } else {
-      manage = _getVariableManage(ctxScope);
-    }
+    let manage = getVariableManage(context, isTop);
     if (manage.has(name)) {
       return manage.get(name);
     }
-    return manage.getRefs(name, scope, flags);
+    return manage.getRefs(name, import_Utils5.default.isStack(context) ? context.scope : null, flags);
   }
   function getVariableManage(context, isTop = false) {
     if (import_Utils5.default.isStack(context)) {
@@ -9721,7 +9775,6 @@ var Context2 = class extends Context_default {
   }
   createDefaultRoutePathNode(module2) {
     if (import_Utils22.default.isModule(module2)) {
-      console.log("=====\n", this.plugin.makeCode.getDefaultRoutePath(module2), module2.file);
       return this.createLiteral(
         this.plugin.makeCode.getDefaultRoutePath(module2)
       );
@@ -12406,20 +12459,17 @@ var defaultConfig = {
     imports: {},
     folders: {}
   },
-  dependences: {
+  dependency: {
     externals: [],
     includes: [],
     excludes: []
   }
 };
-function getOptions(options = {}) {
-  if (arguments.length > 1) {
-    options = (0, import_merge.default)({}, ...Array.from(arguments));
-  }
+function getOptions(...options) {
   return (0, import_merge.default)(
     {},
     defaultConfig,
-    options
+    ...options
   );
 }
 
@@ -12480,8 +12530,8 @@ var defaultConfig2 = {
     }
   }
 };
-function getOptions2(options = {}) {
-  return getOptions(defaultConfig2, options);
+function getOptions2(...options) {
+  return getOptions(defaultConfig2, ...options);
 }
 
 // lib/tokens/index.js
@@ -12664,19 +12714,19 @@ var Plugin3 = class extends Plugin_default2 {
 
 // package.json
 var package_default = {
-  name: "es-nuxt",
+  name: "@easescript/es-nuxt",
   version: "0.0.1",
   main: "dist/index.js",
   typings: "dist/types/typings.json",
   scripts: {
     "test:build": "cross-env VITE_CJS_IGNORE_WARNING=true NODE_DEBUG=deprecation nuxt build",
-    run: "npm run build && cross-env VITE_CJS_IGNORE_WARNING=true nuxt dev",
+    test: "npm run build && cross-env VITE_CJS_IGNORE_WARNING=true nuxt dev",
     generate: "nuxt generate",
     preview: "nuxt preview",
     postinstall: "nuxt prepare",
     dev: "node ./scripts/build.js && jasmine test/index.js",
     build: "npm run manifest && node ./scripts/build.js",
-    manifest: "esc -o lib/types -f lib/types/index.d.es --manifest --scope es-next --inherit es-vue,es-javascript"
+    manifest: "esc -o lib/types -f lib/types/index.d.es --manifest --scope es-next --inherit @easescript/es-vue,@easescript/es-javascript"
   },
   esconfig: {
     scope: "es-nuxt",
@@ -12722,7 +12772,7 @@ var package_default = {
 
 // lib/index.js
 var defaultConfig3 = {
-  dependences: {
+  dependency: {
     excludes: [
       /(^|[\/\\\\])axios([\/\\\\]|$)/i
     ]
@@ -12747,8 +12797,8 @@ function plugin(options = {}) {
     getOptions3(options)
   );
 }
-function getOptions3(options = {}) {
-  return getOptions2(defaultConfig3, options);
+function getOptions3(...options) {
+  return getOptions2(defaultConfig3, ...options);
 }
 var lib_default = plugin;
 // Annotate the CommonJS export names for ESM import in node:

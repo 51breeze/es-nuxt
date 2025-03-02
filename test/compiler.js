@@ -23,7 +23,7 @@ class Creator {
             emitFile:true,
             module:'esm',
             outExt:'.js',
-            outDir:'test/.output',
+            outDir:path.resolve('test/.output'),
             mode:'development',
             srcCSS:false,
             sourceMaps:true,
