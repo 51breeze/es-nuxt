@@ -660,13 +660,13 @@ Object.defineProperty( Component, 'resolveDirective', {value:function resolveDir
     return items;
 }});
 
-
 Object.defineProperty( Component, 'createComponent', {value:function createComponent(constructor,options={}){
     const hasTemplate = options.hasTemplate;
     const esHandle = options.esHandle || 'esInstance';
     const esPrivateKey = options.esPrivateKey;
-    const ssrCtx = options.__ssrContext;
-    const asyncSetup = options.__asyncSetup;
+    const ssrCtx = options.__ssrCtx;
+    const asyncSetup = options.__async;
+    const exportClass = options.__exportClass;
     const classDescriptor = Class.getClassDescriptor(constructor);
     options.props = options.props || {};
     if(classDescriptor){
@@ -701,9 +701,9 @@ Object.defineProperty( Component, 'createComponent', {value:function createCompo
         delete options.esPrivateKey;
         delete options.exposes;
     }
-    delete options.__ssrContext;
-    delete options.__vccOpts;
-    delete options.__asyncSetup;
+    delete options.__ssrCtx;
+    delete options.__exportClass;
+    delete options.__async;
     const init=()=>{
         if( ssrCtx && !hasTemplate ){
             const ssrContext = Vue.useSSRContext();
@@ -786,7 +786,6 @@ Object.defineProperty( Component, 'createComponent', {value:function createCompo
             });
         }
 
-       
         if( !initialized ){
             esInstance[privateKey].initialized=true;
             esInstance.addEventListener(ComponentEvent.DESTROYED,()=>{
@@ -859,6 +858,9 @@ Object.defineProperty( Component, 'createComponent', {value:function createCompo
         }
     }
     Component.defineComponent(constructor, options);
+    if(exportClass===false){
+        return options;
+    }
     return hasTemplate ? options : constructor;
 
 }});

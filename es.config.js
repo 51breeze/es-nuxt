@@ -38,7 +38,6 @@ module.exports = {
 			options:{
 			  version:"3.0.0",
 			  optimize:true,
-			  webpack:true,
 			  nuxtRootDir:__dirname,
 			 // format:"vue-template",
 			  hmrHandler:'import.meta.hot',
@@ -54,7 +53,20 @@ module.exports = {
 			  useAbsolutePathImport:true,
 			  sourceMaps:true,
 			  babel:false,
-			  output:"build"
+			  output:"build",
+			  importFormation:{
+					query:{
+						enabled:false,
+						test:null,
+						attrs:{
+							vue:''
+						}
+					},
+					ext:{
+						enabled:false,
+						suffix:"{extname}.vue"
+					}
+				}
 			}
 		},
 		

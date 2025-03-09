@@ -1942,15 +1942,20 @@ function createESMExports(ctx, exportManage, graph) {
   });
   return { imports, exports: exports2, declares };
 }
+function checkMatchStringOfRule(rule, source, ...args) {
+  if (rule == null)
+    return true;
+  if (typeof rule === "function") {
+    return rule(source, ...args);
+  } else if (rule instanceof RegExp) {
+    return rule.test(source);
+  }
+  return rule === source;
+}
 function isExternalDependency(externals, source, module2 = null) {
   if (Array.isArray(externals) && externals.length > 0) {
     return externals.some((rule) => {
-      if (typeof rule === "function") {
-        return rule(source, module2);
-      } else if (rule instanceof RegExp) {
-        return rule.test(source);
-      }
-      return rule === source;
+      return rule == null ? false : checkMatchStringOfRule(rule, source, module2);
     });
   }
   return false;
@@ -1958,12 +1963,7 @@ function isExternalDependency(externals, source, module2 = null) {
 function isExcludeDependency(excludes2, source, module2 = null) {
   if (Array.isArray(excludes2) && excludes2.length > 0) {
     return excludes2.some((rule) => {
-      if (typeof rule === "function") {
-        return rule(source, module2);
-      } else if (rule instanceof RegExp) {
-        return rule.test(source);
-      }
-      return rule === source;
+      return rule == null ? false : checkMatchStringOfRule(rule, source, module2);
     });
   }
   return false;
@@ -4532,8 +4532,8 @@ var Context = class _Context extends Token_default {
     }
     return isString ? source : this.getModuleResourceId(source);
   }
-  getModuleResourceId(module2, query = {}) {
-    return this.compiler.parseResourceId(module2, query);
+  getModuleResourceId(module2, query = {}, extformat = null) {
+    return this.compiler.parseResourceId(module2, query, extformat);
   }
   resolveSourceFileMappingPath(file, group, delimiter = "/") {
     return this.resolveSourceId(file, group, delimiter);
@@ -5216,7 +5216,7 @@ function getAssetsManager(AssetFactory) {
     }
     let asset = records2.get(key);
     if (!asset) {
-      records2.set(sourceFile, asset = new AssetFactory(sourceFile, type, id));
+      records2.set(key, asset = new AssetFactory(sourceFile, type, id));
     }
     return asset;
   }
@@ -9696,6 +9696,7 @@ var Plugin_default = Plugin;
 var import_Utils26 = __toESM(require("easescript/lib/core/Utils"));
 
 // node_modules/@easescript/es-vue/lib/core/Context.js
+var import_Namespace9 = __toESM(require("easescript/lib/core/Namespace"));
 var import_Utils23 = __toESM(require("easescript/lib/core/Utils"));
 
 // node_modules/@easescript/es-vue/lib/core/Common.js
@@ -9752,6 +9753,42 @@ var Context2 = class extends Context_default {
       }
     }
     return null;
+  }
+  isWebComponent(module2) {
+    if (import_Utils23.default.isCompilation(module2)) {
+      module2 = module2.mainModule;
+    }
+    if (!import_Utils23.default.isModule(module2))
+      return false;
+    if (module2.isWebComponent())
+      return true;
+    return this.isApplication(module2);
+  }
+  isApplication(module2) {
+    if (!module2 || !module2.isModule || module2.isDeclaratorModule)
+      return false;
+    const Application = import_Namespace9.default.globals.get("web.Application");
+    return Application.is(module2);
+  }
+  getModuleResourceId(module2, query = {}, extformat = null) {
+    const options = this.options.importFormation || {};
+    const importQuery = options.query;
+    const ext = options.ext;
+    const needFormat = extformat == null && ext.enabled && ext.suffix;
+    const needQuery = importQuery.enabled && importQuery.attrs;
+    if ((needFormat || needQuery) && this.isWebComponent(module2)) {
+      if (needFormat && checkMatchStringOfRule(ext.test, module2.file, module2)) {
+        extformat = ext.suffix;
+      }
+      if (needQuery && checkMatchStringOfRule(importQuery.test, module2.file, module2)) {
+        Object.keys(importQuery.attrs).forEach((key) => {
+          if (query[key] === void 0) {
+            query[key] = importQuery.attrs[key];
+          }
+        });
+      }
+    }
+    return super.getModuleResourceId(module2, query, extformat);
   }
   resolveImportSource(id, ctx = {}) {
     const ui = this.options.ui;
@@ -10317,26 +10354,18 @@ var ESXClassBuilder = class extends ClassBuilder_default2 {
         )
       );
     }
-    if (makeOptions.vccOpts) {
-      properties2.push(
-        ctx.createProperty(
-          ctx.createIdentifier("__vccOpts"),
-          ctx.createLiteral(true)
-        )
-      );
-    }
-    if (makeOptions.asyncSetup) {
-      const asyncSetup = makeOptions.asyncSetup;
+    if (makeOptions.async) {
+      const async = makeOptions.async;
       const ssr = !!options.ssr;
-      if (asyncSetup.mode !== "none") {
-        let enable = asyncSetup.mode === "all" || ssr && asyncSetup.mode === "ssr" || !ssr && asyncSetup.mode === "nossr";
-        if (enable && asyncSetup.filter && typeof asyncSetup.filter === "function") {
-          enable = asyncSetup.filter(module2.getName(), this.compilation.file);
+      if (async.mode !== "none") {
+        let enable = async.mode === "all" || ssr && async.mode === "ssr" || !ssr && async.mode === "nossr";
+        if (enable && async.filter && typeof async.filter === "function") {
+          enable = async.filter({ module: module2, compilation: this.compilation, ssr });
         }
         if (enable) {
           properties2.push(
             ctx.createProperty(
-              ctx.createIdentifier("__asyncSetup"),
+              ctx.createIdentifier("__async"),
               ctx.createLiteral(true)
             )
           );
@@ -10364,12 +10393,20 @@ var ESXClassBuilder = class extends ClassBuilder_default2 {
         )
       );
     }
-    if (options.ssr && makeOptions.ssrContext !== false) {
+    if (makeOptions.exportClass === false) {
+      properties2.push(
+        ctx.createProperty(
+          ctx.createIdentifier("__exportClass"),
+          ctx.createLiteral(false)
+        )
+      );
+    }
+    if (options.ssr && makeOptions.ssrCtx !== false) {
       const file = ctx.compiler.getRelativeWorkspace(this.compilation.file);
       if (file) {
         properties2.push(
           ctx.createProperty(
-            ctx.createIdentifier("__ssrContext"),
+            ctx.createIdentifier("__ssrCtx"),
             ctx.createLiteral(
               import_Utils24.default.normalizePath(file)
             )
@@ -10504,7 +10541,7 @@ var ESXClassBuilder = class extends ClassBuilder_default2 {
       let opts = ctx.plugin.options;
       let isHot = true;
       let exportNode = this.#exportVueComponentNode || ctx.createIdentifier(id);
-      if (!opts.hot || opts.mode === "production") {
+      if (opts.ssr || !opts.hot || opts.mode === "production") {
         isHot = false;
       }
       if (isHot) {
@@ -10543,7 +10580,7 @@ function ClassDeclaration_default2(ctx, stack) {
 }
 
 // node_modules/@easescript/es-vue/lib/core/ESXOptimize.js
-var import_Namespace9 = __toESM(require("easescript/lib/core/Namespace"));
+var import_Namespace10 = __toESM(require("easescript/lib/core/Namespace"));
 var import_Utils25 = __toESM(require("easescript/lib/core/Utils"));
 var Cache2 = getCacheManager("common");
 var hasStyleScopedKey = Symbol("hasStyleScoped");
@@ -10589,7 +10626,7 @@ function isOpenBlock(stack) {
     if (desc) {
       const type = desc.type();
       if (import_Utils25.default.isModule(type)) {
-        return import_Namespace9.default.globals.get("web.components.Fragment").is(type);
+        return import_Namespace10.default.globals.get("web.components.Fragment").is(type);
       }
     }
   }
@@ -12538,11 +12575,14 @@ var defaultConfig2 = {
     optimize: true,
     makeOptions: {
       file: false,
-      ssrContext: true,
-      vccOpts: false,
-      asyncSetup: {
-        mode: "none",
+      ssrCtx: false,
+      //if set to false, export the class component, otherwise export the vue-options.
+      exportClass: true,
+      //use async steup
+      async: {
         //none ssr nossr all,
+        mode: "none",
+        //function({module,compilation,ssr}):boolean; 
         filter: null
       }
     },
@@ -12552,12 +12592,18 @@ var defaultConfig2 = {
       exposeFilter: (name) => !["window", "document"].includes(name)
     }
   },
-  importSourceQuery: {
-    enabled: false,
-    test: null,
-    types: ["component", "styles"],
+  importFormation: {
     query: {
-      vue: ""
+      enabled: false,
+      test: null,
+      attrs: {
+        vue: ""
+      }
+    },
+    ext: {
+      enabled: false,
+      test: null,
+      suffix: "{extname}.vue"
     }
   }
 };
@@ -12587,10 +12633,10 @@ function CallExpression(ctx, stack) {
 }
 
 // lib/tokens/ClassDeclaration.js
-var import_Namespace10 = __toESM(require("easescript/lib/core/Namespace"));
+var import_Namespace11 = __toESM(require("easescript/lib/core/Namespace"));
 function ClassDeclaration_default3(ctx, stack) {
   if (stack.module === stack.compilation.mainModule && stack.compilation.modules.size === 1) {
-    const Application = import_Namespace10.default.globals.get("web.Application");
+    const Application = import_Namespace11.default.globals.get("web.Application");
     if (stack.isModuleForWebComponent(stack.module) || Application.is(stack.module)) {
       const builder2 = new ESXClassBuilder_default(stack);
       return builder2.create(ctx);
@@ -12750,7 +12796,7 @@ var package_default = {
   main: "dist/index.js",
   typings: "dist/types/typings.json",
   scripts: {
-    "test:build": "cross-env VITE_CJS_IGNORE_WARNING=true NODE_DEBUG=deprecation nuxt build",
+    "test:build": "npm run build && cross-env VITE_CJS_IGNORE_WARNING=true NODE_DEBUG=deprecation nuxt build",
     test: "npm run build && cross-env VITE_CJS_IGNORE_WARNING=true nuxt dev",
     generate: "nuxt generate",
     preview: "nuxt preview",
@@ -12786,16 +12832,13 @@ var package_default = {
     easescript: "latest",
     "easescript-cli": "^0.1.3",
     "element-plus": "latest",
-    "es-javascript": "latest",
-    "es-php": "latest",
-    "es-thinkphp": "latest",
     "es-vite-plugin": "latest",
-    "es-vue": "latest",
     "esbuild-plugin-copy": "^2.1.1",
     jasmine: "^3.10.0",
     lodash: "^4.17.21",
-    nuxt: "^3.15.1",
-    pinia: "^2.2.2",
+    nuxt: "^3.16.0",
+    pinia: "^2.1.7",
+    vite: "^6.2.1",
     vue: "^3.4.21",
     "vue-router": "^4.3.0"
   }
@@ -12812,13 +12855,15 @@ var defaultConfig3 = {
     module: "esm"
   },
   hmrHandler: "import.meta.hot",
-  vueOptions: {
-    __asyncSetup: {
-      mode: "all"
+  vue: {
+    makeOptions: {
+      file: true,
+      ssrCtx: true,
+      async: {
+        //none ssr nossr all
+        mode: "none"
+      }
     }
-  },
-  importSourceQuery: {
-    enabled: true
   }
 };
 function plugin(options = {}) {

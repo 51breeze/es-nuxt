@@ -9,7 +9,7 @@ const optimizeDeps = [
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  devtools: { enabled: true },
+  devtools: { enabled: false },
   rootDir:__dirname,
   srcDir:"test/src/",
   extensions:['.es'],
@@ -66,5 +66,5 @@ export default defineNuxtConfig({
       // }
   },
 
-  compatibilityDate: '2025-01-18'
+  compatibilityDate: '2025-03-07'
 })

@@ -45,7 +45,7 @@ class Person extends Page{
 
         console.log( '----onInitialized----person' )
 
-        this.data.name = "===6666666-9999----"
+        this.data.name = "===6666666-9999--222--"
 
         this.withContext(()=>{
 
@@ -94,7 +94,7 @@ class Person extends Page{
     @Override
     protected render(){
 
-        console.log( ProfileStore.use().userId,'--999--' )
+        console.log( ProfileStore.use().userId,'--999-333-' )
 
         var params = {id:60}
 
@@ -105,7 +105,7 @@ class Person extends Page{
             <h6>{this.data.name}</h6>
 
             <ui:Button>
-                <ui:Icon name="Plus" />button
+                <ui:Icon name="Plus" />button 222
             </ui:Button>
 
             <ui:Select b:value={data4.select}>
@@ -126,7 +126,7 @@ class Person extends Page{
             <ui:ClientOnly fallback="fallback">
                
                 <s:fallback>
-                    <div>=======55559999===</div>
+                    <div>=======5555===</div>
                 </s:fallback>
                 
             </ui:ClientOnly>
@@ -134,3 +134,10 @@ class Person extends Page{
     }
 
 }
+
+<style scoped>
+    .login-container{
+        background-color: rgb(222, 222, 222);
+    }
+
+</style>

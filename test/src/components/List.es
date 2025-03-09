@@ -3,8 +3,8 @@ package components{
     class List extends Component{
         @Override
         protected render():VNode|Component {
-            return <div sss="ss">
-                <div>=========List Component===</div>
+            return <div sss="ss"  class="list">
+                <div>=========List=======</div>
                 <div>
                     <slot:default />
                 </div>
@@ -12,3 +12,10 @@ package components{
         }
     }
 }
+
+<style scoped>
+    .list{
+        background-color: rgb(157, 204, 157);
+    }
+
+</style>
