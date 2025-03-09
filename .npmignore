@@ -9,5 +9,4 @@ yarn.lock
 es.config.js
 nuxt.config.js
 scripts
-dist
 build
