@@ -37,6 +37,7 @@ module.exports = __toCommonJS(lib_exports);
 
 // node_modules/@easescript/transform/lib/core/Plugin.js
 var import_Compilation = __toESM(require("easescript/lib/core/Compilation"));
+var import_Diagnostic = __toESM(require("easescript/lib/core/Diagnostic"));
 var import_path6 = __toESM(require("path"));
 
 // node_modules/@easescript/transform/lib/core/Builder.js
@@ -9531,20 +9532,18 @@ function createPolyfillModule(dirname, createVModule) {
 
 // node_modules/@easescript/transform/lib/core/Plugin.js
 var import_events = __toESM(require("events"));
-function defineError(complier) {
-  if (defineError.loaded || !complier || !complier.diagnostic)
-    return;
-  defineError.loaded = true;
-  let define = complier.diagnostic.defineError;
-  define(1e4, "", [
+import_Diagnostic.default.register("transform", (definer) => {
+  definer(
+    1e4,
     "\u7ED1\u5B9A\u7684\u5C5E\u6027(%s)\u5FC5\u987B\u662F\u4E00\u4E2A\u53EF\u8D4B\u503C\u7684\u6210\u5458\u5C5E\u6027",
     "Binding the '%s' property must be an assignable members property"
-  ]);
-  define(10101, "", [
+  );
+  definer(
+    10101,
     "\u8DEF\u7531\u53C2\u6570(%s)\u7684\u9ED8\u8BA4\u503C\u53EA\u80FD\u662F\u4E00\u4E2A\u6807\u91CF",
     "Route params the '%s' defalut value can only is a literal type."
-  ]);
-}
+  );
+});
 var plugins = /* @__PURE__ */ new Set();
 var processing = /* @__PURE__ */ new Map();
 async function execute(compilation, asyncBuildHook) {
@@ -9637,7 +9636,6 @@ var Plugin = class _Plugin extends import_events.default {
       return;
     this.#initialized = true;
     this.#complier = complier;
-    defineError(complier);
     await this.init();
     if (this.options.mode === "development") {
       this.watch();
@@ -12302,10 +12300,10 @@ export default __$$metadata;`;
 // node_modules/@easescript/es-vue/lib/core/Plugin.js
 var import_path8 = __toESM(require("path"));
 var import_Compilation2 = __toESM(require("easescript/lib/core/Compilation"));
-function defineError2(complier) {
-  if (defineError2.loaded || !complier || !complier.diagnostic)
+function defineError(complier) {
+  if (defineError.loaded || !complier || !complier.diagnostic)
     return;
-  defineError2.loaded = true;
+  defineError.loaded = true;
   let define = complier.diagnostic.defineError;
   define(11e3, "", [
     '\u5BF9\u975E\u5143\u7D20\u6839\u8282\u70B9\u7684\u7EC4\u4EF6\u4F7F\u7528"show"\u6307\u4EE4\u65F6\uFF0C\u65E0\u6CD5\u6309\u9884\u671F\u8FD0\u884C\u3002',
@@ -12407,7 +12405,7 @@ var Plugin2 = class extends Plugin_default {
     return makeCode;
   }
   init() {
-    defineError2(this.complier);
+    defineError(this.complier);
     this.#context = createBuildContext2(this, this.records);
     createPolyfillModule(
       import_path8.default.join(__dirname, "./polyfills"),
@@ -12792,7 +12790,7 @@ var Plugin3 = class extends Plugin_default2 {
 // package.json
 var package_default = {
   name: "@easescript/es-nuxt",
-  version: "0.0.1",
+  version: "0.0.2",
   main: "dist/index.js",
   typings: "dist/types/typings.json",
   scripts: {
@@ -12817,8 +12815,7 @@ var package_default = {
     ]
   },
   dependencies: {
-    "@easescript/es-vue": "latest",
-    "cross-env": "^7.0.3"
+    "@easescript/es-vue": "latest"
   },
   devDependencies: {
     "@element-plus/nuxt": "^1.0.8",
