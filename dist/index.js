@@ -11272,25 +11272,6 @@ function makeElementVNode(ctx, stack, data, childNodes, isBlock) {
   } else {
     name = ctx.createLiteral(stack.openingElement.name.value());
   }
-  if (!isBlock && data.patchFlag === ELEMENT_HOISTED && data["class"] && stack.isModuleForWebComponent(stack.module)) {
-    let scopeId = Cache2.get(stack.compilation, hasStyleScopedKey);
-    if (scopeId == null) {
-      if (hasStyleScoped(stack.compilation)) {
-        Cache2.set(stack.compilation, hasStyleScopedKey, scopeId = ctx.getHashId());
-      } else {
-        Cache2.set(stack.compilation, hasStyleScopedKey, scopeId = "");
-      }
-    }
-    if (scopeId) {
-      scopeId = String(ctx.options.vue.scopePrefix || "") + scopeId;
-      data.attrs.push(
-        ctx.createProperty(
-          ctx.createLiteral(scopeId),
-          ctx.createLiteral(1)
-        )
-      );
-    }
-  }
   let dataObject = createElementPropsNode(ctx, data, stack, excludes);
   let items = [name, null, null, null, null];
   let pos = 1;
@@ -11626,9 +11607,13 @@ function createElement2(ctx, stack) {
         }
       } else if (children.length > 0) {
         if (children.length > 1 || !isStaticHoisted) {
-          childNodes = makeChildrenNodes(ctx, children, true, false, stack);
+          childNodes = makeChildrenNodes(ctx, children, true, pureStaticChild, stack);
         } else {
-          childNodes = children[0];
+          if (children[0] && children[0].type === "Literal") {
+            childNodes = children[0];
+          } else {
+            childNodes = makeChildrenNodes(ctx, children, true, pureStaticChild, stack);
+          }
           if (childNodes && !isStaticHoisted && childNodes.pureStaticChild) {
             childNodes = ctx.addStaticHoisted(childNodes);
           }
