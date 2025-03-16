@@ -7,6 +7,8 @@
 ///<references from='Class' />
 ///<namespaces name='dev.tools' />
 ///<createClass value='false' />
+///<import from='vue' name='Vue' namespaced />
+const _createVNode = Vue.h;
 const errorHook = ()=>{
     console.warn('[HMR] __VUE_HMR_RUNTIME__ is not defined.');
 }
@@ -57,7 +59,10 @@ const HMR={
 
         let render = object.render;
         if(render){
-            Api.rerender(id, render);
+            Api.rerender(id, function(ctx, cached){
+                ctx.setCacheForVNode(cached);
+                return render.call(ctx, _createVNode)
+            });
         }else{
             HMR.reload(id, vueComponent);
         }

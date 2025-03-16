@@ -57,6 +57,7 @@ function Component(props){
             vueContext:null,
             children:[],
             injecteds:[],
+            renderCached:null,
             propsUpdating:false,
             provides:emtyObject,
             preventedProps:Object.create(null),
@@ -350,6 +351,19 @@ Object.defineProperty( proto, 'removeEventListener', {value:function removeEvent
 
 Object.defineProperty( proto, 'hasEventListener', {value:function hasEventListener(type, listener){
     return EventDispatcher.prototype.hasEventListener.call(this,type, listener);
+}});
+
+Object.defineProperty( proto, 'getCacheForVNode', {value:function getCacheForVNode(){
+    const target = this[privateKey];
+    if(!target.renderCached){
+        target.renderCached  = [];
+    }
+    return target.renderCached;
+}});
+
+Object.defineProperty( proto, 'setCacheForVNode', {value:function setCacheForVNode(cached){
+    const target = this[privateKey];
+    return target.renderCached=cached;
 }});
 
 Object.defineProperty( proto, 'on', {value:function on(type, listener){
@@ -665,10 +679,15 @@ Object.defineProperty( Component, 'createComponent', {value:function createCompo
     const esHandle = options.esHandle || 'esInstance';
     const esPrivateKey = options.esPrivateKey;
     const ssrCtx = options.__ssrCtx;
+    const ssrRender = options.__ssrRender;
     const asyncSetup = options.__async;
     const exportClass = options.__exportClass;
     const classDescriptor = Class.getClassDescriptor(constructor);
     options.props = options.props || {};
+    if(ssrRender){
+        //options.__ssrInlineRender = true;
+    }
+
     if(classDescriptor){
         let inheritClass = classDescriptor;
         while(inheritClass && (inheritClass = inheritClass.inherit) && inheritClass !== Component ){
@@ -701,6 +720,7 @@ Object.defineProperty( Component, 'createComponent', {value:function createCompo
         delete options.esPrivateKey;
         delete options.exposes;
     }
+    delete options.__ssrRender;
     delete options.__ssrCtx;
     delete options.__exportClass;
     delete options.__async;
@@ -818,8 +838,9 @@ Object.defineProperty( Component, 'createComponent', {value:function createCompo
             }
             return [esInstance, exposes, initialized];
         }else{
-            return [esInstance, function(){
-                return esInstance.render( _createVNode );
+            return [esInstance, function(ctx, cached){
+                esInstance.setCacheForVNode(cached)
+                return esInstance.render(_createVNode);
             }, initialized];
         }
     }

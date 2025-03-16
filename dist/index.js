@@ -502,7 +502,7 @@ var annotationIndexers = {
   syntax: ["plugin", "expect"],
   plugin: ["name", "expect"],
   version: ["name", "version", "operator", "expect"],
-  readfile: ["dir", "load", "suffix", "relative", "lazy", "only", "source"],
+  readfile: ["path", "load", "suffix", "relative", "lazy", "only", "source", "extractDir"],
   http: ["classname", "action", "param", "data", "method", "config"],
   router: ["classname", "action", "param"],
   alias: ["name", "version"],
@@ -594,26 +594,40 @@ function parseMacroMethodArguments(args, name) {
   });
   return parseMacroArguments(args, name);
 }
+function parseAnnotationArguments(args, indexes, defaults = {}) {
+  let annotArgs = getAnnotationArguments(args, indexes);
+  let results = {};
+  annotArgs.forEach((arg, index) => {
+    let key = indexes[index];
+    let value = arg ? arg.value : defaults[key];
+    results[key] = value;
+  });
+  return [annotArgs, results];
+}
 function parseReadfileAnnotation(ctx, stack) {
   let args = stack.getArguments();
   let indexes = annotationIndexers.readfile;
-  let stackArgs = {};
-  let annotArgs = indexes.map((key) => {
-    return stackArgs[key] = getAnnotationArgument(key, args, indexes);
+  let [annotArgs, values] = parseAnnotationArguments(args, indexes, {
+    load: true,
+    extractDir: true,
+    relative: true
   });
-  let dirStack = annotArgs[0] && annotArgs[0].stack;
-  let [_path, _load, _suffix, _relative, _lazy, _only, _source] = annotArgs.map((item) => {
-    return item ? item.value : null;
-  });
-  if (!_path) {
+  let {
+    path: dir,
+    load,
+    suffix: _suffix,
+    relative,
+    lazy,
+    only,
+    source,
+    extractDir
+  } = values;
+  let suffixPattern = null;
+  if (!dir) {
+    ctx.error(`Readfile annotation arguments is not defined. the 'path' arguments.`, annotArgs[0] && annotArgs[0].stack || stack);
     return null;
   }
-  let dir = String(_path).trim();
-  let [load, relative, lazy, only, source] = [_load, _relative, _lazy, _only, _source].map((value) => {
-    value = String(value).trim();
-    return value == "true" || value === "TRUE";
-  });
-  let suffixPattern = null;
+  dir = String(dir).trim();
   if (dir.charCodeAt(0) === 64) {
     dir = dir.slice(1);
     let segs = dir.split(".");
@@ -632,7 +646,7 @@ function parseReadfileAnnotation(ctx, stack) {
   let rawDir = dir;
   dir = stack.compiler.resolveManager.resolveSource(dir, stack.compilation.file);
   if (!dir) {
-    ctx.error(`Readfile not found the '${rawDir}' folders`, dirStack || stack);
+    ctx.error(`Readfile not found the '${rawDir}' folders`, annotArgs[0] && annotArgs[0].stack || stack);
     return null;
   }
   if (_suffix) {
@@ -662,16 +676,28 @@ function parseReadfileAnnotation(ctx, stack) {
       return true;
     return suffix.some((item) => file.endsWith(item));
   };
-  let files = stack.compiler.resolveFiles(dir).filter(checkSuffix).map(import_Utils.default.normalizePath);
-  if (!files.length)
-    return null;
+  const getFileDirs = (file) => {
+    let index = file.lastIndexOf("/");
+    let dirname = file.slice(0, index);
+    if (dirname !== dir && dirname.startsWith(dir)) {
+      return [dirname, ...getFileDirs(dirname)];
+    }
+    return [];
+  };
+  let files = stack.compiler.resolveFiles(dir).filter(checkSuffix).map((file) => {
+    file = import_Utils.default.normalizePath(file);
+    if (extractDir) {
+      return [...getFileDirs(file), file];
+    }
+    return [file];
+  }).flat();
   files.sort((a, b) => {
     a = a.replaceAll(".", "/").split("/").length;
     b = b.replaceAll(".", "/").split("/").length;
     return a - b;
   });
   return {
-    args: stackArgs,
+    args: annotArgs,
     dir,
     only,
     suffix,
@@ -746,7 +772,13 @@ function parseHttpAnnotation(ctx, stack) {
 function parseRouterAnnotation(ctx, stack) {
   const args = stack.getArguments();
   const indexes = annotationIndexers.router;
-  const [moduleClass, actionArg, paramArg] = indexes.map((key) => getAnnotationArgument(key, args, indexes));
+  const [moduleClass, actionArg, paramArg] = indexes.map((key) => {
+    let result = getAnnotationArgument(key, args, indexes);
+    if (!result && key === "param") {
+      result = getAnnotationArgument("params", args, indexes);
+    }
+    return result;
+  });
   const module2 = moduleClass ? import_Namespace.default.globals.get(moduleClass.value) : null;
   if (!module2) {
     ctx.error(`Class '${moduleClass.value}' is not exists.`);
@@ -1246,10 +1278,6 @@ function createHttpAnnotationNode(ctx, stack) {
     }
     return null;
   };
-  const System = import_Namespace.default.globals.get("System");
-  const Http = import_Namespace.default.globals.get("net.Http");
-  ctx.addDepend(System, stack.module);
-  ctx.addDepend(Http, stack.module);
   const props = {
     data: createArgNode(data),
     options: createArgNode(config),
@@ -1263,27 +1291,14 @@ function createHttpAnnotationNode(ctx, stack) {
     return null;
   }).filter((item) => !!item);
   let calleeArgs = [
-    ctx.createIdentifier(
-      ctx.getGlobalRefName(
-        stack,
-        ctx.getModuleReferenceName(Http, stack.module)
-      )
-    ),
+    createModuleReferenceNode(ctx, stack, "net.Http"),
     routeConfigNode
   ];
   if (properties2.length > 0) {
     calleeArgs.push(ctx.createObjectExpression(properties2));
   }
   return ctx.createCallExpression(
-    ctx.createMemberExpression([
-      ctx.createIdentifier(
-        ctx.getGlobalRefName(
-          stack,
-          ctx.builder.getModuleReferenceName(System, stack.module)
-        )
-      ),
-      ctx.createIdentifier("createHttpRequest")
-    ]),
+    createStaticReferenceNode(ctx, stack, "System", "createHttpRequest"),
     calleeArgs,
     stack
   );
@@ -1352,7 +1367,6 @@ function createRouterAnnotationNode(ctx, stack) {
     if (!paramArg) {
       return ctx.createLiteral(createRoutePath(route));
     } else {
-      const System = import_Namespace.default.globals.get("System");
       const routePath = "/" + route.path.split("/").map((segment) => {
         if (segment.charCodeAt(0) === 58) {
           return "<" + segment.slice(1) + ">";
@@ -1360,7 +1374,6 @@ function createRouterAnnotationNode(ctx, stack) {
         return segment;
       }).filter((val) => !!val).join("/");
       let paramNode = ctx.createToken(paramArg.assigned ? paramArg.stack.right : paramArg.stack);
-      ctx.addDepend(System, stack.module);
       if (route.params) {
         const defaultParams = ctx.createObjectExpression(
           Object.keys(route.params).map((name) => {
@@ -1380,16 +1393,7 @@ function createRouterAnnotationNode(ctx, stack) {
         );
       }
       return ctx.createCallExpression(
-        ctx.createMemberExpression([
-          ctx.createIdentifier(
-            ctx.getGlobalRefName(
-              stack,
-              ctx.getModuleReferenceName(System, stack.module)
-            ),
-            stack
-          ),
-          ctx.createIdentifier("createHttpRoute", stack)
-        ]),
+        createStaticReferenceNode(ctx, stack, "System", "createHttpRoute"),
         [
           ctx.createLiteral(routePath),
           paramNode
@@ -1472,7 +1476,7 @@ function createRouteConfigNode(ctx, module2, method, paramArg) {
   if (formatRoute) {
     url = formatRoute(url, {
       action: actionName,
-      pathArg: value,
+      path: value,
       method: allowMethodNames,
       params: declareParams,
       className: module2.getName()
@@ -1498,7 +1502,7 @@ function createRouteConfigNode(ctx, module2, method, paramArg) {
     Object.keys(props).map((name) => {
       const value2 = props[name];
       if (value2) {
-        return ctx.createProperty(name, value2);
+        return ctx.createProperty(ctx.createIdentifier(name), value2);
       }
       return null;
     }).filter((item) => !!item)
@@ -1578,7 +1582,7 @@ function createReadfileAnnotationNode(ctx, stack) {
         properties2.push(ctx.createProperty(ctx.createIdentifier("isFile"), ctx.createLiteral(true)));
       }
       if (object.content) {
-        properties2.push(ctx.createProperty(ctx.createIdentifier("content"), ctx.createChunkExpression(object.content)));
+        properties2.push(ctx.createProperty(ctx.createIdentifier("content"), ctx.createChunkExpression(object.content, false)));
       }
       if (object.children) {
         properties2.push(ctx.createProperty(ctx.createIdentifier("children"), ctx.createArrayExpression(make(object.children))));
@@ -1757,10 +1761,14 @@ function createCJSExports(ctx, exportManage, graph) {
           );
         }
       } else if (spec.type === "default") {
+        let local = spec.local;
+        if (spec.local.type === "ExpressionStatement") {
+          local = spec.local.expression;
+        }
         properties2.push(
           ctx.createProperty(
             ctx.createIdentifier("default"),
-            spec.local,
+            local,
             spec.stack
           )
         );
@@ -9546,7 +9554,7 @@ import_Diagnostic.default.register("transform", (definer) => {
 });
 var plugins = /* @__PURE__ */ new Set();
 var processing = /* @__PURE__ */ new Map();
-async function execute(compilation, asyncBuildHook) {
+async function execute(compilation, asyncHook) {
   if (processing.has(compilation)) {
     return await new Promise((resolve) => {
       processing.get(compilation).push(resolve);
@@ -9554,7 +9562,7 @@ async function execute(compilation, asyncBuildHook) {
   } else {
     let queues = [];
     processing.set(compilation, queues);
-    let result = await asyncBuildHook(compilation);
+    let result = await asyncHook(compilation);
     while (queues.length > 0) {
       let resolve = queues.shift();
       resolve(result);
@@ -9570,6 +9578,7 @@ var Plugin = class _Plugin extends import_events.default {
   #name = null;
   #options = null;
   #initialized = false;
+  #watched = false;
   #context = null;
   #complier = null;
   #version = "0.0.0";
@@ -9613,6 +9622,9 @@ var Plugin = class _Plugin extends import_events.default {
   }
   //开发模式下调用，用来监听文件变化时删除缓存
   watch() {
+    if (this.#watched)
+      return;
+    this.#watched = true;
     this.complier.on("onChanged", (compilation) => {
       this.records.delete(compilation);
       let cache = this.context.cache;
@@ -9624,6 +9636,8 @@ var Plugin = class _Plugin extends import_events.default {
     });
   }
   async init() {
+    if (this.#context)
+      return;
     this.#context = createBuildContext(this, this.records);
     createPolyfillModule(
       import_path6.default.join(__dirname, "./polyfills"),
@@ -9634,12 +9648,12 @@ var Plugin = class _Plugin extends import_events.default {
   async beforeStart(complier) {
     if (this.#initialized)
       return;
-    this.#initialized = true;
     this.#complier = complier;
     await this.init();
     if (this.options.mode === "development") {
       this.watch();
     }
+    this.#initialized = true;
   }
   //当任务处理完成后调用。在加载插件或者打包插件时会调用这个方法，用来释放一些资源
   async afterDone() {
@@ -9715,6 +9729,7 @@ function hasStyleScoped(compilation) {
 
 // node_modules/@easescript/es-vue/lib/core/Context.js
 var EXCLUDE_STYLE_RE = /[\\\/]style[\\\/](css|index)$/i;
+var emptyObject2 = {};
 var Context2 = class extends Context_default {
   #staticHoisted = /* @__PURE__ */ new Set();
   addStaticHoisted(node) {
@@ -9734,6 +9749,53 @@ var Context2 = class extends Context_default {
   }
   get staticHoistedItems() {
     return Array.from(this.#staticHoisted.values());
+  }
+  #cacheRecords = null;
+  getRenderContextForVNode(jsxElement) {
+    if (!jsxElement)
+      return emptyObject2;
+    let root = jsxElement.jsxRootElement;
+    if (!root)
+      return emptyObject2;
+    let cacheRecords = this.#cacheRecords || (this.#cacheRecords = /* @__PURE__ */ new Map());
+    let method = root.getParentStack((parent) => parent.isMethodDefinition);
+    if (!method || !method.isMethodDefinition) {
+      return emptyObject2;
+    }
+    let records2 = cacheRecords.get(method);
+    if (!records2) {
+      let refs = this.getLocalRefName(method, "_cache", method);
+      let added = false;
+      cacheRecords.set(
+        method,
+        records2 = {
+          method,
+          refs,
+          count: 0,
+          created: () => {
+            if (added)
+              return true;
+            added = true;
+            return false;
+          }
+        }
+      );
+    }
+    return records2;
+  }
+  #cacheIndex = 0;
+  createCacheForVNode(jsxElement, vnode) {
+    let ctx = this.getRenderContextForVNode(jsxElement);
+    let { method, refs } = ctx;
+    if (!method)
+      return vnode;
+    ctx.count++;
+    let index = this.#cacheIndex++;
+    let object = this.createComputeMemberExpression([this.createIdentifier(refs), this.createLiteral(index)]);
+    let node = this.createLogicalExpression(object, this.createParenthesizedExpression(
+      this.createAssignmentExpression(object, vnode)
+    ), "||");
+    return node;
   }
   getAvailableOriginType(type) {
     if (type) {
@@ -10846,7 +10908,7 @@ function createAttributes2(ctx, stack, data) {
       name = String(name);
       name = name.includes(":") ? ctx.createLiteral(name) : ctx.createIdentifier(name);
     }
-    let property = ctx.createProperty(name, node);
+    let property = ctx.createProperty(name, ctx.createCacheForVNode(stack, node));
     if (property.key.computed) {
       property.computed = true;
       property.key.computed = false;
@@ -11327,7 +11389,11 @@ function createNormalVNode(ctx, childNode, toTextNode = false, disableHoisted = 
     node.isElementVNode = true;
   }
   if (!disableHoisted && node && node.pureStaticChild && !node.isStaticHoistedNode) {
-    node = ctx.addStaticHoisted(node);
+    if (node.isTextVNode) {
+      node = ctx.addStaticHoisted(node);
+    } else {
+      node = ctx.createCacheForVNode(stack, node);
+    }
   }
   return node;
 }
@@ -11615,7 +11681,7 @@ function createElement2(ctx, stack) {
             childNodes = makeChildrenNodes(ctx, children, true, pureStaticChild, stack);
           }
           if (childNodes && !isStaticHoisted && childNodes.pureStaticChild) {
-            childNodes = ctx.addStaticHoisted(childNodes);
+            childNodes = ctx.createCacheForVNode(stack, childNodes);
           }
         }
       }
@@ -11629,6 +11695,28 @@ function createElement2(ctx, stack) {
   }
   nodeElement.pureStaticChild = isStaticHoisted;
   nodeElement.hasKeyAttribute = !!data.key;
+  if (isRoot) {
+    let { method, refs, count, created } = ctx.getRenderContextForVNode(stack);
+    if (count > 0 && !created()) {
+      let methodBlock = ctx.getNode(method.body);
+      if (methodBlock) {
+        let createCache2 = ctx.createVariableDeclaration("const", [
+          ctx.createVariableDeclarator(
+            ctx.createIdentifier(refs),
+            ctx.createCallExpression(
+              ctx.createMemberExpression([
+                ctx.createThisExpression(),
+                ctx.createIdentifier("getCacheForVNode")
+              ])
+            )
+          )
+        ]);
+        methodBlock.body.unshift(createCache2);
+      } else {
+        console.error("[ESX] Not found method body in element context");
+      }
+    }
+  }
   return nodeElement;
 }
 
@@ -12558,7 +12646,7 @@ var defaultConfig2 = {
     optimize: true,
     makeOptions: {
       file: false,
-      ssrCtx: false,
+      ssrCtx: void 0,
       //if set to false, export the class component, otherwise export the vue-options.
       exportClass: true,
       //use async steup
