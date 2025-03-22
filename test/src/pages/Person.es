@@ -113,9 +113,8 @@ class Person extends Page{
                 <ui:Option value={2} label={"two"} >two</ui:Option>
             </ui:Select>
 
-
             <ui:Link to="/">Index</ui:Link>
-            <ui:Link to={@Router(pages.members.Profile, param=params)}>profile</ui:Link>
+            <ui:Link to={@Router(pages.members.Profile, params={id:60})}>profile</ui:Link>
              <ui:Link to={@Router(pages.Address)}>Address</ui:Link>
              
             <div>===6666 ==</div>

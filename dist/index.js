@@ -910,9 +910,6 @@ function createRouteInstance(ctx, module2, owner, path10, method, meta = null, p
       owner.error(10112);
     }
     action = owner.value();
-    if (!path10 && module2) {
-      path10 = module2.id + "/" + action;
-    }
     owner.params.forEach((item) => {
       if (item.isObjectPattern || item.isArrayPattern) {
         item.error(10107);
@@ -937,8 +934,13 @@ function createRouteInstance(ctx, module2, owner, path10, method, meta = null, p
       params.push({ name, optional });
     });
   }
+  if (!path10 && action) {
+    path10 = action;
+  }
   let pathName = path10 ? String(path10).trim() : action;
+  let isModuleId = false;
   if (!pathName) {
+    isModuleId = true;
     pathName = module2.id;
   }
   let startsCode = pathName.charCodeAt(0);
@@ -956,6 +958,8 @@ function createRouteInstance(ctx, module2, owner, path10, method, meta = null, p
     if (route) {
       hasFull = true;
       pathName = route.path + "/" + pathName;
+    } else if (!isModuleId) {
+      pathName = module2.id + "/" + pathName;
     }
   }
   if (!hasFull && options.routePathWithNamespace && module2.namespace) {
@@ -1451,7 +1455,7 @@ function createHttpAnnotationNode(ctx, stack) {
   if (!result)
     return null;
   const { param, method, data, config } = result.args;
-  const route = getMethodRoutes(result.method, allRouteMethods, ctx.options);
+  const route = getMethodRoutes(ctx, result.method, allRouteMethods)[0];
   if (!route) {
     let path10 = result.module.getName() + ":" + result.method.value();
     stack.error(10102, path10);
@@ -1571,7 +1575,6 @@ function getPageRoutePath(ctx, route) {
   let routeParamFormat = ctx.options?.formation?.routeParamFormat;
   let routePath = route.path;
   if (route.params.length > 0) {
-    properties = [];
     let segments = route.params.map((item) => {
       let name = item.name;
       if (routeParamFormat) {
@@ -1614,10 +1617,12 @@ function parseRouteCompletePath(ctx, route, paramArg = null) {
     defaultArgumentNode = ctx.createObjectExpression(properties2);
   }
   let argumentNode = null;
-  if (import_Utils.default.isStack(paramArg)) {
-    argumentNode = ctx.createToken(paramArg.assigned ? paramArg.stack.right : paramArg.stack);
-  } else if (Node_default.is(paramArg)) {
-    argumentNode = paramArg;
+  if (paramArg) {
+    if (import_Utils.default.isStack(paramArg.stack)) {
+      argumentNode = ctx.createToken(paramArg.assigned ? paramArg.stack.right : paramArg.stack);
+    } else if (Node_default.is(paramArg)) {
+      argumentNode = paramArg;
+    }
   }
   if (argumentNode && defaultArgumentNode) {
     argumentNode = ctx.createCallExpression(
@@ -1659,13 +1664,13 @@ function createMainAnnotationNode(ctx, stack) {
   }
   return callMain;
 }
-function createRouteConfigNodeForHttpRequest(ctx, route, paramArg) {
+function createRouteConfigNodeForHttpRequest(ctx, route, paramArg = null) {
   if (!route)
     return null;
   let path10 = route.path;
   let defaultParams = [];
   let allowMethodNode = ctx.createArrayExpression(
-    route.method.split(",").map((val) => val.trim())
+    route.method.split(",").map((val) => ctx.createLiteral(val.trim()))
   );
   Object.keys(route.defaultValue).forEach((key) => {
     defaultParams.push(ctx.createProperty(
@@ -12068,12 +12073,13 @@ var MakeCode = class extends Token_default {
     pages.forEach((pageModule) => {
       const pid = import_path7.default.dirname(pageModule.file).toLowerCase();
       const id = (pid + "/" + pageModule.id).toLowerCase();
-      let routes = this.getModuleRoute(ctx, pageModule, true);
+      let routes = this.getModuleRoute(ctx, pageModule);
       let metakey = "__meta" + metadata.size;
       metadata.set(pageModule, metakey);
       routes.forEach((route) => {
+        let routePath = getPageRoutePath(ctx, route);
         let item = {
-          path: route.path || "/" + pageModule.getName("/"),
+          path: routePath || "/" + pageModule.getName("/"),
           name: route.name || pageModule.getName("/"),
           meta: metakey,
           redirect: getModuleRedirectNode(ctx, pageModule),
@@ -12116,7 +12122,7 @@ ${top}]`;
     };
     const code = make(Object.values(routesData));
     const gen = new Generator_default();
-    ctx.createModuleDependencies(contextModule);
+    ctx.createAllDependencies();
     let importNodes = null;
     if (ctx.options.module === "cjs") {
       importNodes = createCJSImports(ctx, ctx.imports);
@@ -12145,17 +12151,10 @@ ${top}]`;
     return name;
   }
   getModuleRoute(ctx, module2) {
-    if (!module2)
-      return [];
-    if (!module2.isModule || !module2.isClass || module2.isDeclaratorModule)
-      return [];
-    let routes = getModuleRoutes(ctx, module2);
-    if (routes && routes.length > 0)
-      return routes;
-    return [];
+    return getModuleRoutes(ctx, module2);
   }
-  makeModuleMetadata(module2) {
-    const ctx = this.plugin.context.makeContext(module2);
+  makeModuleMetadata(module2, compilation) {
+    const ctx = this.plugin.context.makeContext(compilation);
     const metadataAnnot = getModuleAnnotations(module2, ["metadata"])[0];
     const imports = /* @__PURE__ */ new Set();
     const body = [];
@@ -12233,7 +12232,7 @@ ${top}]`;
         ctx.createToken(stack);
       });
     }
-    ctx.createModuleDependencies(module2);
+    ctx.createAllDependencies();
     let importNodes = null;
     if (ctx.options.module === "cjs") {
       importNodes = createCJSImports(ctx, ctx.imports);
@@ -12272,7 +12271,7 @@ export default __$$metadata;`;
       module2 = Array.from(compilation.modules.values()).find((m) => m.getName() === query.id && m.isModule && m.isClass && !m.isDeclaratorModule);
     }
     if (import_Utils25.default.isModule(module2)) {
-      return this.makeModuleMetadata(module2);
+      return this.makeModuleMetadata(module2, compilation);
     }
     return `export default {};`;
   }
@@ -12753,7 +12752,6 @@ var MakeCode2 = class extends MakeCode {
     const route = this.getModuleRoute(ctx, module2)[0];
     const gen = new Generator_default();
     const redirect = getModuleRedirectNode(ctx, module2);
-    console.log(module2.file, !!redirect);
     const metadataAnnot = getModuleAnnotations(module2, ["metadata"])[0];
     const metadata = /* @__PURE__ */ Object.create(null);
     if (metadataAnnot) {
