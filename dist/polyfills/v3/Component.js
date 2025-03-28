@@ -353,12 +353,20 @@ Object.defineProperty( proto, 'hasEventListener', {value:function hasEventListen
     return EventDispatcher.prototype.hasEventListener.call(this,type, listener);
 }});
 
-Object.defineProperty( proto, 'getCacheForVNode', {value:function getCacheForVNode(){
+Object.defineProperty( proto, 'getCacheForVNode', {value:function getCacheForVNode(key){
     const target = this[privateKey];
     if(!target.renderCached){
         target.renderCached  = [];
     }
-    return target.renderCached;
+    let cached = target.renderCached;
+    if(key===true){
+        cached[privateKey] = null;
+    }else{
+        let dataset = cached[privateKey] || (cached[privateKey] = Object.create(null));
+        cached = dataset[key] || (dataset[key]=[]);
+        cached.index = 0;
+    }
+    return cached;
 }});
 
 Object.defineProperty( proto, 'setCacheForVNode', {value:function setCacheForVNode(cached){
